@@ -154,6 +154,7 @@ class variableRecordBinary{
     }
 
     void add(){
+        // Escribir en el registro4
         std::ofstream registros("registros4.dat", std::ios::binary);
         Matricula matricula;
         matricula.codigo = 'A001';
@@ -161,6 +162,11 @@ class variableRecordBinary{
         matricula.mensualidad = 1502.01;
         matricula.observaciones= 'Prueba agregar';
         registros.write((char*)&matricula, sizeof(Matricula));
+        registros.close();
+        // Escribir en la metadata
+        std::ofstream registros("registros4.dat", std::ios::binary);
+
+
     }
 
     Matricula readRecord(int pos) {
@@ -173,9 +179,9 @@ class variableRecordBinary{
     }
 };
 
-
-
-/* vector<Matricula> load(){
+/* 
+    -- No imprime --
+    vector<Matricula> load(){
     vector<Matricula> matriculas;
     std::ifstream indices("metadata4.dat" , ios::in | ios::binary); 
     if(!indices){ 
@@ -231,28 +237,7 @@ class variableRecordBinary{
  */
 
 
-/* void test_p4(){
-    cout<<"test_p4";
-    Matricula matricula;
-    VariableRecord_binary p4;
-    cout<<"test_p4";
-    vector<Matricula> test_1 = p4.load(); 
-    
-} */
 
-/* void test_p5(){
-   
-    std::vector<Matricula> matriculas = load();
-    cout<<"length" <<matriculas.size();
-    // Imprimir información de cada matrícula
-    for (const auto& matricula : matriculas) {
-        std::cout << "Código: " << matricula.codigo << std::endl;
-        std::cout << "Ciclo: " << matricula.ciclo << std::endl;
-        std::cout << "Mensualidad: " << matricula.mensualidad << std::endl;
-        std::cout << "Observaciones: " << matricula.observaciones << std::endl;
-        std::cout << std::endl;
-    }
-} */
 
 void test_p6(){
     cout<<"Item (a): ";
@@ -271,8 +256,4 @@ void test_p6(){
     Matricula matricula = p4D.readRecord(2);
     cout<<matricula;
 
-}
-int main(){
-   
-    test_p6();
 }
