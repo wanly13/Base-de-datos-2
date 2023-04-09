@@ -186,7 +186,7 @@ class variableRecordBinary{
 
 
             cout<<"Matricula\n";
-           // cout<<matricula; // imprimimos en pantalla
+            cout<<matricula; // imprimimos en pantalla
                 
             //registros.read((char*)&matricula, sizeof(matricula));
             matriculas.push_back(matricula);
@@ -228,10 +228,44 @@ class variableRecordBinary{
     }
 
     Matricula readRecord(int pos) {
-        std::ifstream archivo("datos.dat", std::ios::binary);
+        std::ifstream archivo("registros.dat", std::ios::binary);
         Matricula matricula;
-        archivo.seekg(pos * sizeof(Matricula));
-        archivo.read((char*)&matricula, sizeof(Matricula));
+        vector<Indice> indices_metadata = load_metadata();
+        for(int i = 0 ; i < indices_metadata.size() ; i++){
+            if (i == pos){
+                archivo.seekg(indices_metadata[0].tamagno);
+                
+                size_t size_codigo;
+                size_t size_observaciones;
+                // Leer el codigo [string]
+                archivo.read((char*)&size_codigo, sizeof(size_t));
+                char * buffer_code = new char[size_codigo + 1];
+                archivo.read(buffer_code, size_codigo);
+                buffer_code[size_codigo] = '\0'; // agregar el carácter nulo al final
+                matricula.codigo = buffer_code;
+                delete[] buffer_code;
+
+                // Leer ciclo
+                archivo.read((char*)&matricula.ciclo , sizeof(int));
+
+                // Leer Mensualidad
+                archivo.read((char*)&matricula.mensualidad , sizeof(int));
+                
+                // Leer el observaciones [string]
+                
+                archivo.read((char*)&size_observaciones, sizeof(size_t));
+                char * buffer_obs = new char[size_observaciones + 1];
+                archivo.read(buffer_obs, size_observaciones);
+                buffer_obs[size_observaciones] = '\0'; // agregar el carácter nulo al final
+                matricula.observaciones = buffer_obs;
+                delete[] buffer_obs; // liberar la memoria después de usarla
+
+
+                cout<<"Matricula\n";
+                cout<<matricula; // imprimimos en pantalla
+            }
+        }
+        
         archivo.close();
         return matricula;
     }
@@ -256,27 +290,21 @@ class variableRecordBinary{
 
 
 
-/* void test_p6(){ */
-int main(){
-    cout<<"Item (a): \n";
-    //cout<<"En el archivo metadata4.dat nos facilita saber la posición inicial \n de cada registro del archivo binario 'datos1.dat', de esta misma \n  forma tenemos el dato de la longitud en bytes por cada registro. \n Ventajas: \n- Se obtieen un facil acceso a cualquier registro en especifico\n- Puede ser muy util en busqueda por rangos de tamaño\nDesventajas:\n- Es mas conveniente usarlo en busqueda por rangos de tamaño, por otro lado\nno es tan necesario ya que se puede usar las posiciones iniciales\n";
+void test_p4(){
+/* int main(){ */
 
-    cout<<"Item (b): \n";
+    cout<<">>>> Item (a): \n";
+    cout<<"En el archivo metadata.dat nos facilita saber la posición inicial \n de cada registro del archivo binario 'registros.dat', de esta misma \n  forma tenemos el dato de la longitud en bytes por cada registro. \n Ventajas: \n- Se obtieen un facil acceso a cualquier registro en especifico\n- Puede ser muy util en busqueda por rangos de tamaño\nDesventajas:\n- Es mas conveniente usarlo en busqueda por rangos de tamaño, por otro lado\nno es tan necesario ya que se puede usar las posiciones iniciales\n";
+
+    cout<<">>>> Item (b): \n";
     variableRecordBinary p4B;
     vector<Matricula> vector1 = p4B.load();
 
-    cout<<"Item (c): \n";
-    //variableRecordBinary p4C;
-    //p4C.add();
+    cout<<">>>> Item (c): \n";
+    variableRecordBinary p4C;
+    p4C.add();
 
-    cout<<"Item (d): \n";
-    //variableRecordBinary p4D;
-    //Matricula matricula = p4D.readRecord(2);
-    //cout<<matricula;
-    //cout<<"pruebas: "<<endl;
-    //variableRecordBinary loadMetatada;
-    //loadMetatada.load_metadata();
-
-
-
+    cout<<">>>> Item (d): \n";
+    variableRecordBinary p4D;
+    Matricula matricula = p4D.readRecord(2);
 }

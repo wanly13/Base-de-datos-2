@@ -5,8 +5,7 @@
 #include <vector>
 using namespace std;
 
-struct Alumno//Record
-{	
+struct Alumno{	
   char Code [5];
 	char Nombre [11];
 	char Apellidos [20];
@@ -78,3 +77,16 @@ class FixedRecord{
     };
 
 };
+
+void test_p1(){
+  cout<<">>>> Item (b): \n";
+  vector<Alumno> v;
+  Alumno a;
+  FixedRecord p1;
+  v = p1.load();
+
+  cout<<">>>> Item (e): \n";
+  a = p1.readRecord(1);
+  cout << a;
+
+}

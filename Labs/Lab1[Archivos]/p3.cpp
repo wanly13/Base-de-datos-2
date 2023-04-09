@@ -6,17 +6,15 @@
 #include <vector>
 using namespace std;
 
-struct Alumno3
-{
+struct Alumno3{
   string Nombre;
   string Apellidos;
   string Carrera;
   float Mensualidad;
 
 };
-
-inline istream & operator >> (istream & stream, Alumno3 & p)
-{	
+//Sobrecarga cin
+inline istream & operator >> (istream & stream, Alumno3 & p){	
     string campo;
     getline(stream, campo,'|');
     p.Nombre = campo;
@@ -25,14 +23,12 @@ inline istream & operator >> (istream & stream, Alumno3 & p)
     getline(stream, campo,'|');
     p.Carrera = campo;
     getline(stream, campo);
-    p.Mensualidad = stof(campo);
-  
+    p.Mensualidad = stof(campo);  
 	  return stream;
 }
 
 //Sobrecarga cout
-inline ostream & operator << (ostream & stream, Alumno3 & p)
-{	
+inline ostream & operator << (ostream & stream, Alumno3 & p){	
 	stream << p.Nombre << "|";
 	stream << p.Apellidos << "|";
   stream << p.Carrera << "|";
@@ -86,10 +82,12 @@ class VariableRecord{
 
 
 void test_3(){
-     vector<Alumno3> v3;
+  vector<Alumno3> v3;
   Alumno3 a3;
   VariableRecord p3;
-  // v3 = p3.load();
+  cout<<">>>> Item (b): \n";
+  v3 = p3.load();
+  cout<<">>>> Item (d): \n";
   a3 = p3.readRecord(4);
   cout << a3;
 }
