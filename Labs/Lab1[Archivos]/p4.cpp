@@ -14,19 +14,16 @@ using namespace std;
       de cada registro en el archivo.
  */
 /* 
- Este archivo de índice puede contener información como el número de registro, la posición de inicio del registro en el archivo binario y la longitud del registro en bytes. Esta información puede ser útil para acceder rápidamente a un registro específico dentro del archivo binario sin tener que recorrer todo el archivo */
+Este archivo de índice puede contener información como el número de registro, la posición de inicio del registro en el archivo binario y la longitud del registro en bytes. Esta información puede ser útil para acceder rápidamente a un registro específico dentro del archivo binario sin tener que recorrer todo el archivo */
 
 struct Matricula{
     string codigo;
     int ciclo;
     float mensualidad;
     string observaciones;
-
-    
 };
 
 struct Indice {
-    int nroRegistro;
     int posInitial;
     int tamagno;
 };
@@ -41,10 +38,20 @@ inline ostream & operator << (ostream & stream, Matricula & p){
     stream << flush;
     return stream;
 }
-inline istream & operator >> (istream & stream, Matricula & p){
-  stream.read((char*) &p, sizeof(p));
-  return stream;
-}
+
+
+/* inline istream & operator >> (istream & stream, Matricula & p){
+    stream.read((char*) &p.codigo, sizeof(int)); // string
+
+    
+    
+    
+    stream.read((char*) &p.ciclo, sizeof(p)); // int
+    stream.read((char*) &p.mensualidad, sizeof(int)); // int
+    
+    stream.read((char*) &p.observaciones, sizeof(p)); // string
+    return stream;
+} */
 
 /* class VariableRecord_binary {
     
@@ -107,43 +114,79 @@ class variableRecordBinary{
 
   public:
     vector<Indice> load_metadata(){
-        inFile.open("metadata4.dat", ios::binary);
-        if (inFile.fail()){ cout<<"No se pudo abrir el archivo"; }
-        
-        Indice index; vector<Indice> indices_metadata;
-        string line;
-        do{
-            inFile.read((char*) &index, sizeof(index));            
-            
+        ifstream archivo("metadata.dat", ios::binary);
+        if (!archivo) {
+            cout << "Error al abrir el archivo." << endl;
+        }
 
-            if (inFile.eof()) break; 
-            cout<<'index.nroRegistro'<< index.nroRegistro <<endl;
-            cout<<'index.posInitial'<< index.posInitial <<endl;
-            cout<<'index.tamagno'<< index.tamagno <<endl;
-            indices_metadata.push_back(index);
-        } while(getline(inFile, line));
-         inFile.close();
-        return indices_metadata;
+        vector<Indice> indices; // vector de estructuras Indice
+        cout<<"Indices: \n";
+        while (!archivo.eof()) { // leer mientras no se alcance el final del archivo
+            Indice indice;
+            archivo.read((char*)&indice.posInitial, sizeof(int)); // leer primer valor
+            archivo.read((char*)&indice.tamagno, sizeof(int)); // leer segundo valor
+
+            // Agregar el nuevo índice al final del vector
+            indices.emplace_back(indice);
+
+            // Imprimir los valores leídos
+            cout << " posInitial = " << indice.posInitial << ", tamagno = " << indice.tamagno << endl;
+        }
+
+        archivo.close();
+        return indices;
     }
+
     vector<Matricula> load(){
         vector<Matricula> matriculas;
         vector<Indice> indices_metadata = load_metadata();
         
-        std::ifstream registros("registros4.dat", std::ios::binary);
+        std::ifstream registros("registros.dat", std::ios::binary);
         if(!registros){ 
             cout<<"No se pudo abrir el archivo de registros"; 
         }
-
+        cout<<"entrams bucle\n";
          for (const auto& indice : indices_metadata) {
             Matricula matricula;
-            cout<<matricula;
-            registros.seekg(indice.posInitial);          
-            registros >> matricula.codigo;
-            registros >> matricula.ciclo;
-            registros >> matricula.mensualidad;
-            registros >> matricula.observaciones;
-          
-            cout<<matricula; // imprimimos en pantalla
+            
+            registros.seekg(indice.posInitial); // Nos ubicamos en la posicion inicial         
+
+            size_t size_codigo;
+            size_t size_observaciones;
+            // Leer el codigo [string]
+            /* registros.read((char*)&size_codigo , sizeof(size_t));
+            char * buffer_code = new char[size_codigo] ;
+            registros.read(buffer_code, sizeof(size_t));
+            matricula.codigo = buffer_code; */
+
+            registros.read((char*)&size_codigo, sizeof(size_t));
+            char * buffer_code = new char[size_codigo + 1];
+            registros.read(buffer_code, size_codigo);
+            buffer_code[size_codigo] = '\0'; // agregar el carácter nulo al final
+            matricula.codigo = buffer_code;
+            delete[] buffer_code;
+
+            // Leer ciclo
+            registros.read((char*)&matricula.ciclo , sizeof(int));
+
+            // Leer Mensualidad
+            registros.read((char*)&matricula.mensualidad , sizeof(int));
+            
+            // Leer el observaciones [string]
+            /* registros.read((char*)&size_observaciones , sizeof(size_t));
+            char * buffer_obs = new char[size_observaciones] ;
+            registros.read(buffer_obs, sizeof(size_t));
+            matricula.observaciones = buffer_obs; */
+            registros.read((char*)&size_observaciones, sizeof(size_t));
+            char * buffer_obs = new char[size_observaciones + 1];
+            registros.read(buffer_obs, size_observaciones);
+            buffer_obs[size_observaciones] = '\0'; // agregar el carácter nulo al final
+            matricula.observaciones = buffer_obs;
+            delete[] buffer_obs; // liberar la memoria después de usarla
+
+
+            cout<<"Matricula\n";
+           // cout<<matricula; // imprimimos en pantalla
                 
             //registros.read((char*)&matricula, sizeof(matricula));
             matriculas.push_back(matricula);
@@ -154,17 +197,32 @@ class variableRecordBinary{
     }
 
     void add(){
-        // Escribir en el registro4
-        std::ofstream registros("registros4.dat", std::ios::binary);
+        // Escribir en el registro
+        std::ofstream registros("registros.dat", std::ios::binary);
         Matricula matricula;
-        matricula.codigo = 'A001';
-        matricula.ciclo=3;
-        matricula.mensualidad = 1502.01;
-        matricula.observaciones= 'Prueba agregar';
-        registros.write((char*)&matricula, sizeof(Matricula));
-        registros.close();
+        matricula.codigo = "004";
+        matricula.ciclo=4;
+        matricula.mensualidad = 4500;
+        matricula.observaciones= "observacion4"; 
+
+        // Escribir el codigo [string]
+        size_t codigo_size = matricula.codigo.size();
+        registros.write((char*)&codigo_size , sizeof(size_t) );
+        registros.write(matricula.codigo.c_str(), matricula.codigo.size());
+        
+        // Escribir ciclo y mensualidad [int]
+        registros.write((char*)&matricula.ciclo, sizeof(int));
+        registros.write((char*)&matricula.mensualidad, sizeof(int));
+        
+        // Escribir observaciones [string]
+        size_t observaciones_size = matricula.observaciones.size();
+        registros.write((char*)&observaciones_size , sizeof(size_t) );
+        registros.write(matricula.observaciones.c_str(), matricula.observaciones.size());
+
+
+        registros.close(); 
         // Escribir en la metadata
-        std::ofstream registros("registros4.dat", std::ios::binary);
+        
 
 
     }
@@ -177,50 +235,9 @@ class variableRecordBinary{
         archivo.close();
         return matricula;
     }
+
+
 };
-
-/* 
-    -- No imprime --
-    vector<Matricula> load(){
-    vector<Matricula> matriculas;
-    std::ifstream indices("metadata4.dat" , ios::in | ios::binary); 
-    if(!indices){ 
-        cout<<"No se pudo abrir el archivo de indices"; 
-    }
-    
-    vector<Indice> indices_v; Indice currentIndex;
-    
-    // Leemos la primera fila y lo asignamos en currentIndex y agregamos al vector
-    
-    
-    while (!indices.eof()) {
-        Indice indice;
-        indices.read((char*)&indice, sizeof(indice));        
-    }
-    
-    indices.close();
-
-    // Usamos los indices obtenidos
-    std::ifstream registros("registros4.dat", std::ios::binary);
-    if(!registros){ 
-        cout<<"No se pudo abrir el archivo de registros"; 
-    }
-    
-    // Imprimimos los datos
-    for (const auto& indice : indices_v) {
-        cout<<"bu";
-        Matricula matricula;
-        cout<<matricula;
-        registros.seekg(indice.posicion);
-        registros.read((char*)&matricula, sizeof(matricula));
-        
-        //cout<<matricula; // imprimimos en pantalla
-        matriculas.push_back(matricula);
-    }
-    registros.close();
-
-    return matriculas;
-} */
 /* Item 1
 
     En el archivo metadata4.dat nos facilita saber la posición inicial de cada registro
@@ -239,21 +256,27 @@ class variableRecordBinary{
 
 
 
-void test_p6(){
-    cout<<"Item (a): ";
-    cout<<"En el archivo metadata4.dat nos facilita saber la posición inicial \n de cada registro del archivo binario 'datos1.dat', de esta misma \n  forma tenemos el dato de la longitud en bytes por cada registro. \n Ventajas: \n- Se obtieen un facil acceso a cualquier registro en especifico\n- Puede ser muy util en busqueda por rangos de tamaño\nDesventajas:\n- Es mas conveniente usarlo en busqueda por rangos de tamaño, por otro lado\nno es tan necesario ya que se puede usar las posiciones iniciales\n";
+/* void test_p6(){ */
+int main(){
+    cout<<"Item (a): \n";
+    //cout<<"En el archivo metadata4.dat nos facilita saber la posición inicial \n de cada registro del archivo binario 'datos1.dat', de esta misma \n  forma tenemos el dato de la longitud en bytes por cada registro. \n Ventajas: \n- Se obtieen un facil acceso a cualquier registro en especifico\n- Puede ser muy util en busqueda por rangos de tamaño\nDesventajas:\n- Es mas conveniente usarlo en busqueda por rangos de tamaño, por otro lado\nno es tan necesario ya que se puede usar las posiciones iniciales\n";
 
-    cout<<"Item (b): ";
+    cout<<"Item (b): \n";
     variableRecordBinary p4B;
     vector<Matricula> vector1 = p4B.load();
 
-    cout<<"Item (c): ";
-    variableRecordBinary p4C;
-    p4C.add();
+    cout<<"Item (c): \n";
+    //variableRecordBinary p4C;
+    //p4C.add();
 
-    cout<<"Item (d): ";
-    variableRecordBinary p4D;
-    Matricula matricula = p4D.readRecord(2);
-    cout<<matricula;
+    cout<<"Item (d): \n";
+    //variableRecordBinary p4D;
+    //Matricula matricula = p4D.readRecord(2);
+    //cout<<matricula;
+    //cout<<"pruebas: "<<endl;
+    //variableRecordBinary loadMetatada;
+    //loadMetatada.load_metadata();
+
+
 
 }
