@@ -1,0 +1,1 @@
+/usr/bin/c++  -g   CMakeFiles/BasedeDatos_lab1.dir/main.cpp.o  -o BasedeDatos_lab1 

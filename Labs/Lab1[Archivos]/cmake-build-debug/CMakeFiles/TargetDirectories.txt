@@ -1,0 +1,3 @@
+/home/milagros/BasedeDatos_lab1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/milagros/BasedeDatos_lab1/cmake-build-debug/CMakeFiles/BasedeDatos_lab1.dir
+/home/milagros/BasedeDatos_lab1/cmake-build-debug/CMakeFiles/edit_cache.dir
