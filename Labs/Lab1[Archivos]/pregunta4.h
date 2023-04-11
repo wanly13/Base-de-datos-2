@@ -143,7 +143,7 @@ public:
             cerr << "No se pudo abrir el archivo\n";
         Matricula matriculado;
 
-        fstream metadata(metadata_name, ios::binary);
+        ifstream metadata(metadata_name, ios::binary);
         metadata.seekg(0, ios::beg);
         metadata.seekg(pos*sizeof(int), ios::cur);
         int pos_registro;

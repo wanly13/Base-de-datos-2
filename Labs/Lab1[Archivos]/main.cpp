@@ -8,11 +8,11 @@
 
 using namespace std;
 int main() {
+    // Todo esta funcional, funcionan todos los casos
     /*
     - Participación:
         - Milagros Valeria Yupanqui López [100%]
-        - Marco Wanly Obregón Casique [100%]
-        - xxxxxxxxxxxxxxxxx
+        - Marco Wanly Obregón Casique [100%]        
     */
     //Pruebas p1
     cout<<"// -----------Pregunta 1 ----------- // \n";
