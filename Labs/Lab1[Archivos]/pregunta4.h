@@ -96,7 +96,7 @@ public:
         record.codigo = temp2;
         file.seekg(0, ios::end);
         int newPos = file.tellg();
-        cout<<"Posicion del nuevo registro: "<<newPos<<endl;
+        //cout<<"Posicion del nuevo registro: "<<newPos<<endl;
         file.seekp(0, ios::end);
 
         // Escribir en registro.dat
@@ -184,11 +184,11 @@ void test_pregunta4(){
     //4.a)El constructor reciba el nombre del archivo.
     variableRecordBinary p4("metadata.dat", "registros.dat");
 
-    /*4.c) Implemente la función void add(Alumno record) para agregar un nuevo registro al archivo.
+    /*4.c) Implemente la función void add(Alumno record) para agregar un nuevo registro al archivo.*/
     cout<< "TEST PREGUNTA 4.c: función void add(Alumno record)"<<endl;
     Matricula m4;
     //cin.ignore();
-    p4.add(m4);*/
+    p4.add(m4);
 
     //4.b)Implemente la función vector<Alumno> load() para leer todos los registros del archivo
     cout<< "TEST PREGUNTA 4.b: función vector<Alumno> load()"<<endl;
