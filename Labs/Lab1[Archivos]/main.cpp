@@ -8,7 +8,12 @@
 
 using namespace std;
 int main() {
-
+    /*
+    - Participación:
+        - Milagros Valeria Yupanqui López [100%]
+        - Marco Wanly Obregón Casique [100%]
+        - xxxxxxxxxxxxxxxxx
+    */
     //Pruebas p1
     cout<<"// -----------Pregunta 1 ----------- // \n";
     test_pregunta1();
