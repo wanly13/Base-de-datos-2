@@ -102,7 +102,68 @@ void AVLTree<T>::recursiveUpdateHeight(NodeBT<T> *&node)
         recursiveUpdateHeight(node->right);
     updateHeight(node);
 }
+/* 
+void AVLTree<T>::balanceRecursive(long &node_pos, std::fstream &file) {
+    NodeBT node;
+    file.seekg(node_pos * sizeof(NodeBT));
+    file.read((char*)&node, sizeof(NodeBT));
+    int balance_factor = height(node.left) - height(node.right);
+    if (balance_factor > 1) { // el nodo está desequilibrado hacia la izquierda
+        NodeBT left_node;
+        file.seekg(node.left * sizeof(NodeBT));
+        file.read((char*)&left_node, sizeof(NodeBT));
+        if (height(left_node.left) >= height(left_node.right)) { // rotación simple a la derecha
+            rotateRight(node_pos, file);
+        }
+        else { // rotación doble: izquierda-derecha
+            rotateLeft(left_node.left, file);
+            rotateRight(node_pos, file);
+        }
+        // Actualización de altura
+        updateHeight(node_pos, file);
+        // Verificación de balanceo recursiva
+        if (node_pos != root_pos) {
+            NodeBT parent;
+            file.seekg(node_pos * sizeof(NodeBT));
+            file.read((char*)&parent, sizeof(NodeBT));
+            balanceRecursive((node_pos == parent.left) ? parent.left : parent.right, file);
+        }
+    }
+    else if (balance_factor < -1) { // el nodo está desequilibrado hacia la derecha
+        NodeBT right_node;
+        file.seekg(node.right * sizeof(NodeBT));
+        file.read((char*)&right_node, sizeof(NodeBT));
+        if (height(right_node.right) >= height(right_node.left)) { // rotación simple a la izquierda
+            rotateLeft(node_pos, file);
+        }
+        else { // rotación doble: derecha-izquierda
+            rotateRight(right_node.right, file);
+            rotateLeft(node_pos, file);
+        }
+        // Actualización de altura
+        updateHeight(node_pos, file);
+        // Verificación de balanceo recursiva
+        if (node_pos != root_pos) {
+            NodeBT parent;
+            file.seekg(node_pos * sizeof(NodeBT));
+            file.read((char*)&parent, sizeof(NodeBT));
+            balanceRecursive((node_pos == parent.left) ? parent.left : parent.right, file);
+        }
+    }
+    else { // el nodo está equilibrado
+        // Actualización de altura
+        updateHeight(node_pos, file);
+        // Verificación de balanceo recursiva
+        if (node_pos != root_pos) {
+            NodeBT parent;
+            file.seekg(node_pos * sizeof(NodeBT));
+            file.read((char*)&parent, sizeof(NodeBT));
+            balanceRecursive((node_pos == parent.left) ? parent.left : parent.right, file);
+        }
+    }
+}
 
+ */
 template <typename T>
 string AVLTree<T>::getPreOrder(NodeBT<T> *node)
 {
@@ -131,8 +192,7 @@ void AVLTree<T>::insert(NodeBT<T> *&node, T value) //*
 }
 
 template <typename T>
-bool AVLTree<T>::find(NodeBT<T> *node, T value)
-{
+bool AVLTree<T>::find(NodeBT<T> *node, T value){
     if (node == nullptr)
         return false;
     else if (value < node->data)
@@ -291,6 +351,8 @@ void AVLTree<T>::balance(NodeBT<T> *&node)
     if (b)
         recursiveUpdateHeight(node);
 }
+
+
 
 template <typename T>
 void AVLTree<T>::left_rota(NodeBT<T> *&node)

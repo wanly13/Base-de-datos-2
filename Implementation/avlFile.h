@@ -1,3 +1,10 @@
+/* 
+std::ios::in -->  archivo en modo lectura.
+std::ios::out --> archivo en modo escritura.
+std::ios::binary --> archivo en modo binario, lo que significa que los datos se leerán y escribirán en su forma cruda (es decir, sin realizar ninguna conversión automática de formato).
+std::ios::app --> archivo en modo "append" (agregar), lo que significa que los datos se escribirán al final del archivo en lugar de sobrescribir cualquier contenido existente.
+ */
+
 #include <fstream>
 #include <ostream>
 #include <vector>
@@ -5,13 +12,15 @@
 #include "Record.h"
 using namespace std;
 
-template <typename Record>
+
 class AVLFile {
  private:
     struct NodeBT {
         Record data;
         long left; 
         long right;
+        long height;
+        long pos ;
         NodeBT() {
             left = right = -1;
         }
@@ -34,75 +43,70 @@ class AVLFile {
     }
 
     void insert(Record& record) {
-        std::fstream file(this->filename, std::ios::in|std::ios::out|std::ios::binary | std::ios::app);
-        NodeBT node(record);
-        file.write((char *)&node.data, sizeof(node.data));
-        file.write((char *)&node.left, sizeof(node.left));
-        file.write((char *)&node.right, sizeof(node.right));
-        if (this->root == -1) this->root = 0;
-        else {
-            long pos = file.tellg() / sizeof(NodeBT) - 1;
-            insert(file, this->root, -1, node.data, pos);
-        }
+        std::fstream file(this->filename, std::ios::in|std::ios::out|std::ios::binary | std::ios::app);        
+        insert(file, this->root, record);    
         file.close();
     }
-    void remove(char value[5]) {
-        std::fstream file(this->filename, std::ios::binary | std::ios::in | std::ios::out);
-        if (!file.is_open())
-            throw "Error al abrir el archivo";
-        this->root = remove(file, this->root, value);
+    
+    void remove(Record& record) {
+        std::fstream file(this->filename, std::ios::in|std::ios::out|std::ios::binary | std::ios::app);        
+        remove(file, this->root, record.cod);    
         file.close();
     }
 
+   
     vector<Record> search (Record key){
         std::ifstream file(this->filename, std::ios::binary);
-        vector<Record> result = search(file, this->root, value);        
-    }
+        vector<Record> result = search(file, this->root, key.cod);        
+        file.close();
+    } 
 
-    vector<Record> rangeSearch (Record key1,Record key2 ){
+     vector<Record> rangeSearch (Record& key1,Record& key2 ){
         vector<Record> results;
-        ifstream file(this->filename, std::ios::binary);
+        std::fstream file(this->filename, std::ios::in|std::ios::out|std::ios::binary | std::ios::app);        
 
-        rangeSearch(file, this->root, value_min, value_max, results);
+        rangeSearch(file, this->root, key1.cod, key2.cod, results);
 
         file.close();
         return results;       
-    }
+    } 
+
  private:
     // FUNCTIONS TO USE
     vector<Record> search(std::ifstream &file ,long record_pos, char value[5]);
     
     void rangeSearch(std::fstream &file ,long& record_pos, char begin_key[5], char end_key[5] , std::vector<Record> &results);
     
-    void insert(std::fstream &file, long& record_pos, const long& parent_pos, Record& record, long& pos);
+    //void insert(std::fstream &file, long& record_pos, const long& parent_pos, Record& record, long& pos);
+    //void insert(std::fstream &file, long& record_pos , Record& record);
+    void insert(std::fstream &file , long &node_pos, Record &value);
     
-    long remove(std::fstream &file, long record_pos, char value[5]);
+    //long remove(std::fstream &file, long record_pos, char value[5]);
 
-    int update_height(long record_pos, std::fstream &file);
+    //int update_height(long record_pos, std::fstream &file);
+    void update_height(std::fstream& file, long node_pos);
+    
+    long height (std::fstream& file , long record_pos );
+    //void update_balance_factor(long record_pos, std::fstream &file);
 
-    void update_balance_factor(long record_pos, std::fstream &file);
+    long calculate_balance_factor(std::fstream& file , NodeBT node );
 
-    long balance(long record_pos, std::fstream &file);
+    void balance( std::fstream &file , long &node_pos);
+
+    void left_rotation( std::fstream &file ,long &node_pos);
+
+    void right_rotation( std::fstream &file ,long &node_pos);
+
+    long maxValue(long node_pos, std::fstream &file);
+
+    void remove( std::fstream &file , long &node_pos, char value[5]);
     
     Record find(std::ifstream &file, long record_pos, char value[5]);
 };
 
 // ------------------ IMPLEMENTATIONS ------------------ 
 
-/* template <typename Record>
-vector<Record> AVLFile<Record>::search (Record key){
-    vector<Record> result;
-    return result;
-}
- */
-template <typename Record>
-vector<Record> AVLFile<Record>::search(std::ifstream &file, long record_pos, char value[5]){
-    vector<Record> result;
-    return result;
-}
-
-template <typename Record>
-Record AVLFile<Record>::find(std::ifstream &file, long record_pos, char value[5]){
+Record AVLFile::find(std::ifstream &file, long record_pos, char value[5]){
         if (record_pos == -1)
             throw "Archivo Vacio";
         else {
@@ -119,80 +123,101 @@ Record AVLFile<Record>::find(std::ifstream &file, long record_pos, char value[5]
         }
 }
 
-template <typename Record>
-void insert(std::fstream &file, long& record_pos, const long& parent_pos, Record& record, long& pos){
-        if (record_pos == -1) {
-            NodeBT temp;
-            file.seekg(parent_pos * sizeof(NodeBT));
-            file.read((char*)&temp, sizeof(NodeBT));
-            file.seekg(parent_pos*sizeof(NodeBT)+sizeof(record)+(record <= temp.data)?0:sizeof(temp.left));
-            file.write((char *)&pos, sizeof(pos));
+void AVLFile::insert(std::fstream &file , long &node_pos, Record& value) {
+    if (node_pos == -1) { // Para cuando no existe
+        NodeBT new_node;
+        new_node.data = value;
+        new_node.left = -1;
+        new_node.right = -1;
+        new_node.height = 0;
+        node_pos = file.tellp() / sizeof(NodeBT);
+        //tellp : devuelve la posicion actual para escritura
+        file.write((char*)&new_node, sizeof(NodeBT));
 
+    } else {
+        NodeBT node;
+        file.seekg(node_pos * sizeof(NodeBT));
+        file.read((char*)&node, sizeof(NodeBT));
+
+        if (value.cod < node.data.cod) {
+            insert(file , node.left, value);
+        } else if (value.cod > node.data.cod) {
+            insert(file , node.right, value);
         }
-        else {
-            NodeBT temp;
-            file.seekg(record_pos * sizeof(NodeBT));
-            file.read((char*)&temp, sizeof(NodeBT));
-            if (record <= temp.data)
-                insert(file, temp.left, record_pos, record, pos);
-            else
-                insert(file, temp.right, record_pos, record, pos);
-            
-            this->update_height(temp);
-            this->balance(temp);
-        }
-        
+        update_height( file , node_pos);
+        balance(file , node_pos);
+    }
 }
 
-template <typename Record>
-long AVLFile<Record>::remove(std::fstream& file, long record_pos, char value[5]) {
-    if (record_pos == -1)
+void AVLFile::remove( std::fstream &file , long &node_pos, char value[5]) {
+    if (node_pos == -1) {
         throw "Registro no encontrado";
-    else {
-        NodeBT temp;
-        file.seekg(record_pos * sizeof(NodeBT));
-        file.read((char*)&temp, sizeof(NodeBT));
-
-        if (strcmp(value, temp.data.cod) < 0)
-            temp.left = remove(file, temp.left, value);
-        else if (strcmp(value, temp.data.cod) > 0)
-            temp.right = remove(file, temp.right, value);
-        else {
-            if (temp.left == -1) {
-                long right_child = temp.right;
-                file.seekp(record_pos * sizeof(NodeBT));
-                file.write((char*)&temp.right, sizeof(long));
-                return right_child;
-            }
-            else if (temp.right == -1) {
-                long left_child = temp.left;
-                file.seekp(record_pos * sizeof(NodeBT));
-                file.write((char*)&temp.left, sizeof(long));
-                return left_child;
-            }
-            else {
-                long min_right = find_min(file, temp.right);
-                NodeBT min_right_node;
-                file.seekg(min_right * sizeof(NodeBT));
-                file.read((char*)&min_right_node, sizeof(NodeBT));
-                temp.data = min_right_node.data;
-                temp.right = remove(file, temp.right, min_right_node.data.cod);
-            }
-        }
-        update_height(temp);
-        update_balance_factor(temp);
-
-        file.seekp(record_pos * sizeof(NodeBT));
-        file.write((char*)&temp, sizeof(NodeBT));
-        return balance(file, temp);
     }
+    NodeBT node;
+    file.seekg(node_pos * sizeof(NodeBT));
+    file.read((char*)&node, sizeof(NodeBT));
+
+    if (value < node.data.cod) {
+        remove(file ,node.left, value);
+    }
+    else if (value > node.data.cod) {
+        remove(file ,node.right, value);
+    }
+    else { // se encontró el nodo a eliminar
+        if (node.left == -1 && node.right == -1) { // caso 1: el nodo no tiene hijos
+            file.seekp(node_pos * sizeof(NodeBT));
+            NodeBT delete_node;// Record data_vacia;
+            delete_node.data = Record ();
+            delete_node.left = -1;
+            delete_node.right = -1;
+            delete_node.height = 0;
+
+            // Escribimos el nodo borrado
+            file.write((char*)&delete_node, sizeof(NodeBT));            
+            node_pos = -1; // Ya no esta en uso (Se considera como espacio libre)
+            return; // Aqui termina la ejecicion ya que solo tiene un hijo
+        }
+        else if (node.left == -1 || node.right == -1) { // caso 2: el nodo tiene un solo hijo
+            long child_pos = node.left == -1 ? node.right : node.left; // Igual al de el ejemplo pero optimizado
+            
+            file.seekp(node_pos * sizeof(NodeBT));
+            file.write((char*)&child_pos, sizeof(long));
+
+            node_pos = child_pos;
+        }
+        else { // caso 3: el nodo tiene dos hijos
+            long max_pos = maxValue(node.left, file);
+            NodeBT max_node;
+            file.seekg(max_pos * sizeof(NodeBT));
+            file.read((char*)&max_node, sizeof(NodeBT));
+
+            node.data = max_node.data;
+            remove(file , node.left, max_node.data.cod);
+        }
+    }
+    update_height( file , node_pos);
+    balance( file , node_pos);
 }
 
-template <typename Record>
-void AVLFile<Record>::rangeSearch(std::fstream &file ,long& record_pos, char begin_key[5], char end_key[5] , std::vector<Record> &results){
-    if (record_pos == -1) {
-        throw "El archivo se encuentra vacío";
+long AVLFile::maxValue(long node_pos, std::fstream &file){
+    if (node_pos == -1) 
+        throw "Registro no encontrado";
+
+    NodeBT node;
+    file.seekg(node_pos * sizeof(NodeBT));
+    file.read((char*)&node, sizeof(NodeBT));
+    
+    while (node.right != -1) {
+        node_pos = node.right;
+        file.seekg(node_pos * sizeof(NodeBT));
+        file.read((char*)&node, sizeof(NodeBT));
     }
+    return node_pos; // Para este caso necesitamos la posicion ya que se usa para leer la data
+}
+
+void AVLFile::rangeSearch(std::fstream &file ,long& record_pos, char begin_key[5], char end_key[5] , std::vector<Record> &results){
+    if (record_pos == -1)
+        throw "El archivo se encuentra vacío";
 
     NodeBT temp;
     file.seekg(record_pos * sizeof(NodeBT)); // Nos ubicamos en el root
@@ -213,80 +238,139 @@ void AVLFile<Record>::rangeSearch(std::fstream &file ,long& record_pos, char beg
     if (strcmp(temp.data.cod, end_key) < 0) {
         rangeSearch(file, temp.right, begin_key, end_key, results);
     }
-/*  strcmp:  0: si ambas cadenas son iguales.
-    Un valor negativo: si la primera cadena es menor que la segunda.
-    Un valor positivo: si la primera cadena es mayor que la segunda.
- */
+   // strcmp:  0: si ambas cadenas son iguales.
+   // Un valor negativo: si la primera cadena es menor que la segunda.
+   // Un valor positivo: si la primera cadena es mayor que la segunda.
+
 }
 
-template<typename Record>
-int AVLFile<Record>::update_height(long record_pos, std::fstream &file) {
+void AVLFile::update_height(std::fstream& file, long record_pos) {
     if (record_pos == -1)
-        return -1;
+        throw "Archivo Vacio";
+    
+    // Leemos los datos desde el archivo 
+    NodeBT node;
+    file.seekg(record_pos * sizeof(NodeBT));
+    // Intentar por la tecnica del empaquetado
+    file.read((char*)&node, sizeof(NodeBT));
+
+    // Calculamos la altura entre el izq y der luego calculamos el maximo de ellos
+    node.height = max (height(file , node.left) , height (file , node.right) ) + 1;
+
+    // Escribimos la nueva altura del nodo en su posición correspondiente en el archivo
+    file.seekp(record_pos * sizeof(NodeBT) + offsetof(NodeBT, height));//offsetof : guarda el desplazamiento, en este caso guarda el desplazamiento de height
+    file.write((char*)&node.height, sizeof(node.height));
+}
+
+long AVLFile:: height (std::fstream& file , long record_pos ) {
+    long height = 0;
+    if (record_pos == -1)
+        throw "Archivo Vacio";
     else {
-        NodeBT temp;
-        file.seekg(record_pos * sizeof(NodeBT)); // Nos ubicamos en la posición 
-        file.read(reinterpret_cast<char*>(&temp), sizeof(NodeBT));
-        
-        int left_height = update_height(temp.left, file);
-        int right_height = update_height(temp.right, file);
-        
-        temp.height = std::max(left_height, right_height) + 1;
-        
-        file.seekp(record_pos * sizeof(NodeBT)); // Nos ubicamos en la posición 
-        file.write(reinterpret_cast<const char*>(&temp), sizeof(NodeBT));
-        
-        return temp.height;
+        NodeBT node;
+        file.seekg(node.left * sizeof(NodeBT));
+        file.read((char*)&node, sizeof(NodeBT));
+        height = node.height;
     }
+    return height;
 }
 
-template<typename Record>
-void AVLFile<Record>::update_balance_factor(long record_pos, std::fstream &file) {
-    if (record_pos != -1) {
-        NodeBT temp;
-        file.seekg(record_pos * sizeof(NodeBT)); // Nos ubicamos en la posición 
-        file.read(reinterpret_cast<char*>(&temp), sizeof(NodeBT));
-        
-        int left_height = get_height(temp.left, file);
-        int right_height = get_height(temp.right, file);
-        
-        temp.balance_factor = right_height - left_height;
-        
-        file.seekp(record_pos * sizeof(NodeBT)); // Nos ubicamos en la posición 
-        file.write(reinterpret_cast<const char*>(&temp), sizeof(NodeBT));
-        
-        update_balance_factor(temp.left, file);
-        update_balance_factor(temp.right, file);
+long AVLFile::calculate_balance_factor(std::fstream& file , NodeBT node ){    
+    long balance_factor = height(file , node.left) - height(file , node.right);
+    return balance_factor;
+}   
+
+void AVLFile::balance( std::fstream &file , long &node_pos) {
+    NodeBT node;
+    file.seekg(node_pos * sizeof(NodeBT));
+    
+    file.read((char*)&node, sizeof(NodeBT));// Empaquetado para el read
+    // Obtenemos el factor de balanceo
+    long factor_balanceo = calculate_balance_factor( file , node);
+
+    if (factor_balanceo > 2) { // el nodo está desequilibrado hacia la izquierda
+        NodeBT left_node;
+        file.seekg(node.left * sizeof(NodeBT));
+        file.read((char*)&left_node, sizeof(NodeBT)); // Empaquetado para el read
+
+        if (height(file , left_node.left) >= height(file , left_node.right)) { // rotación simple a la derecha
+            right_rotation(file , node_pos);
+        }
+        else { // rotación doble: izquierda-derecha
+            left_rotation(file , left_node.left);
+            right_rotation(file , node_pos);
+        }
+    } else if (factor_balanceo < -2) { // el nodo está desequilibrado hacia la derecha
+        NodeBT right_node;
+        file.seekg(node.right * sizeof(NodeBT));
+        file.read((char*)&right_node, sizeof(NodeBT));
+        if (height(file , right_node.right) >= height( file , right_node.left)) { // rotación simple a la izquierda
+            left_rotation( file ,node_pos);
+        }
+        else { // rotación doble: derecha-izquierda
+            right_rotation( file ,right_node.right);
+            left_rotation( file ,node_pos);
+        }
     }
+    update_height(file , node_pos); // Actualizamos las alturas
+
+    // Verificacion de balanceo
+     if (node_pos != this -> root) {
+        NodeBT parent;
+        file.seekg(node_pos * sizeof(NodeBT));
+        file.read((char*)&parent, sizeof(NodeBT));
+        balance( file , (node_pos == parent.left) ? parent.left : parent.right);
+    }
+    //valid_balance_recursive(file , node_pos);
+
 }
 
-template<typename Record>
-long AVLFile<Record>::balance(long record_pos, std::fstream &file) {
-    NodeBT temp;
-    file.seekg(record_pos * sizeof(NodeBT)); // Nos ubicamos en la posición 
-    file.read(reinterpret_cast<char*>(&temp), sizeof(NodeBT));
+void AVLFile::left_rotation( std::fstream &file ,long &node_pos) {
+    NodeBT node, right_node;
+    // Nos ubicamos en la posicion del nodo
+    file.seekg(node_pos * sizeof(NodeBT));
+    file.read((char*)&node, sizeof(NodeBT)); // leemos el nodo (Empaquetar)
     
-    if (temp.balance_factor > 1) {
-        NodeBT right_child;
-        file.seekg(temp.right * sizeof(NodeBT)); // Nos ubicamos en la posición 
-        file.read(reinterpret_cast<char*>(&right_child), sizeof(NodeBT));
-        
-        if (right_child.balance_factor < 0) {
-            temp.right = rotate_right(right_child, file);
-        }
-        record_pos = rotate_left(temp, file);
-    } else if (temp.balance_factor < -1) {
-        NodeBT left_child;
-        file.seekg(temp.left * sizeof(NodeBT)); // Nos ubicamos en la posición 
-        file.read(reinterpret_cast<char*>(&left_child), sizeof(NodeBT));
-        
-        if (left_child.balance_factor > 0) {
-            temp.left = rotate_left(left_child, file);
-        }
-        record_pos = rotate_right(temp, file);
-    } else {
-        record_pos = temp_pos;
-    }
+    // Nos ubicamos en la posicion del hijo derecho
+    file.seekg(node.right * sizeof(NodeBT));
+    file.read((char*)&right_node, sizeof(NodeBT));// leemos al hijo (Empaquetar)
+
+    node.right = right_node.left;
+    right_node.left = node_pos;
+
+    node.height =  std::max(height(file , node.left), height(file , node.right)) + 1 ;
+    right_node.height =  std::max(height(file , right_node.left), height(file , right_node.right)) + 1 ;
+
+    file.seekp(node_pos * sizeof(NodeBT)); // Establece la posicion de escritura para el nodo
+    file.write((char*)&node, sizeof(NodeBT));
     
-    return record_pos;
+    file.seekp(right_node.pos  * sizeof(NodeBT)); // Establece la posicion de escritura para el hijo dereco
+    file.write((char*)&right_node, sizeof(NodeBT));
+    node_pos = right_node.pos ;
 }
+
+void AVLFile::right_rotation( std::fstream &file ,long &node_pos) {
+    NodeBT node, left_node;
+    
+    file.seekg(node_pos * sizeof(NodeBT));
+    file.read((char*)&node, sizeof(NodeBT));
+    
+    file.seekg(node.left * sizeof(NodeBT));
+    file.read((char*)&left_node, sizeof(NodeBT));
+    
+    node.left = left_node.right;
+    left_node.right = node_pos;
+    
+    node.height =  std::max(height(file , node.left), height(file , node.right)) + 1 ;
+    left_node.height =  std::max(height(file , left_node.left), height( file , left_node.right)) + 1;
+
+    file.seekp(node_pos * sizeof(NodeBT));
+    file.write((char*)&node, sizeof(NodeBT));
+    
+    file.seekp(left_node.pos * sizeof(NodeBT));
+    file.write((char*)&left_node, sizeof(NodeBT));
+    
+    node_pos = left_node.pos;
+}
+
+
