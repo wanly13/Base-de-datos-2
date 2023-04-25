@@ -32,4 +32,10 @@ Algoritomo [12:54]
 La tecnica no sirve busqueda por rangos  b
 0
 
+[25 abril 2023]  
+
+Ejemplo de la construccion Arbol[12:33]:  
+
+Indique que estrucutura de datos se aplica scritura a escritura  
+
 
