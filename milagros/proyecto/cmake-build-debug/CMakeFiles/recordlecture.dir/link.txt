@@ -1,0 +1,1 @@
+/usr/bin/c++  -g   CMakeFiles/recordlecture.dir/main.cpp.o  -o recordlecture 
