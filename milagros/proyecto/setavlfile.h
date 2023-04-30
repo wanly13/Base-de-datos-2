@@ -7,8 +7,7 @@
 
 #include "avlfile.h"
 
-istream & operator >> (istream & stream, Record & p)
-{
+istream & operator >> (istream & stream, Record & p){
     string campo;
     getline(stream, campo,',');
     p.anime_id = stoi(campo);
@@ -55,27 +54,55 @@ void read_write_dataset(string filename, string avlfilename, AVLFile avl_file){
     if (file.fail()) file_not_found("No se pudo abrir el archivo");
     if (avlfile.fail()) file_not_found("No se pudo abrir el archivo");
 
+    // Colocar el nombre del archivo de AVL
     avl_file.set_filename(avlfilename);
 
+    // Nos ubicamos en la primera posicion del csv    
     avlfile.seekg(0, ios::end);
+   
+   // tellg:  posicion actual
     if (avlfile.tellg() == 0){
         Record anime{};
         string line;
-        getline(file, line);
-
+        getline(file, line); // Leemos toda la linea
         while (getline(file, line)){
+            cout<<"Insert: -> ";
             stringstream stream(line);
             stream >> anime;
-            
             cout<<anime;
-            avl_file.insert(anime);
+            avl_file.insert(anime);// Insertamos al AVL si es que existe
         }
+        cout<<"\nFin de Lectura\n";
 
     }
     else ayudame_Dios("El archivo ya ha sido llenado inicialmente");
     file.close();
 }
 
+
+void read_binary_avl(){
+
+    // Leer los registros del archivo
+    AVLFile::NodeBT registro;
+    fstream archivo("animedata_avl.dat", ios::in | ios::binary);
+    if (!archivo) {
+        cout << "Error al abrir el archivo" << endl;
+    }
+    int cont = 0;
+   /*  while (archivo.read((char*) &registro, sizeof(registro))) {        
+        cout <<"("<<cont++ <<")"<< registro.anime_id << " | " << registro.name << " | " << registro.type << " | " << registro.episodes << " | " << registro.rating << " | " << registro.members << endl;
+    } */
+
+    
+    while (archivo.read((char*) &registro, sizeof(registro))) {
+        //cout << registro.data.anime_id << " | " << registro.data.name << " | " << registro.data.type << " | " << registro.data.episodes << " | " << registro.data.rating << " | " << registro.data.members << " | " <<registro.left << " | " << registro.right << " | " << registro.height << " | " << registro.pos<< endl;
+        cout << registro.data.anime_id << " | " << registro.data.name <<" | " <<registro.left << " | " << registro.right << " | " << registro.height << " | " << registro.pos<< endl;
+    }
+    
+    // Cerrar el archivo
+    archivo.close();
+
+}
 
 #endif //RECORDLECTURE_SETAVLFILE_H
 

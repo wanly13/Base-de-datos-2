@@ -14,7 +14,7 @@
 using namespace std;
 
 class AVLFile {
-private:
+public:
     struct NodeBT {
         Record data;
         long left;
@@ -23,11 +23,21 @@ private:
         long pos ;
         NodeBT() {
             left = right = -1;
+            height = 0;
         }
         NodeBT(Record &record) {
             this->data = record;
             left = right = -1;
+            height = 0;
         }
+        void print_node(){
+            cout<<left << " " << right << " " << height << " "<< " "<<pos<<endl;
+        }
+       /*  void killSelf(){
+            if(left != -1) left->killSelf();
+            if(right != -1) right->killSelf();
+            delete this;
+        }  */
     };
 
 private:
@@ -35,11 +45,17 @@ private:
     std::string filename;
 
 public:
-    AVLFile(){};
+    AVLFile() : root(-1) {};
     AVLFile(string filename){
         this->filename = filename;
+        this-> root = 0;
     }
-
+    string getFileName() {
+        return this->filename;
+    }
+    void getDates(){
+        cout<<root<<endl;
+    }
     void set_filename (string filename){ this->filename = filename;}
 
     Record find(int animeid) {
@@ -110,6 +126,13 @@ private:
     void remove( std::fstream &file , long &node_pos, int value);
 
     Record find(std::ifstream &file, long record_pos, int value);
+
+    // otros
+    long getHeight(std::fstream& file, long node);
+    void rotateLeft(std::fstream& file, long& node) ;
+    void rotateRight(std::fstream& file, long& node);
+    void writeNode(std::fstream& file, long pos, const NodeBT& node);
+    AVLFile::NodeBT readNode(std::fstream& file, long pos);
 };
 
 // ------------------ IMPLEMENTATIONS ------------------
@@ -131,19 +154,17 @@ Record AVLFile::find(std::ifstream &file, long record_pos, int value){
     }
 }
 
-void AVLFile::insert(std::fstream &file , long &node_pos, Record& value) {
+/* void AVLFile::insert(std::fstream &file , long &node_pos, Record& value) {
     if (node_pos == -1) { // Para cuando no existe
-        NodeBT new_node;
-        new_node.data = value;
-        new_node.left = -1;
-        new_node.right = -1;
-        new_node.height = 0;
+        NodeBT new_node(value);
+        
         node_pos = file.tellp() / sizeof(NodeBT);
         //tellp : devuelve la posicion actual para escritura
         file.write((char*)&new_node, sizeof(NodeBT));
+        return ;
 
     } else {
-        NodeBT node;
+        NodeBT node;// Creamos el nodo para que en el se guarde la data que se lee en el read
         file.seekg(node_pos * sizeof(NodeBT));
         file.read((char*)&node, sizeof(NodeBT));
 
@@ -153,7 +174,48 @@ void AVLFile::insert(std::fstream &file , long &node_pos, Record& value) {
             insert(file , node.right, value);
         }
         update_height( file , node_pos);
-        balance(file , node_pos);
+        //balance(file , node_pos);
+    }
+} */
+void AVLFile::insert(std::fstream& file, long& node, Record& record) {
+    if (node == -1) {
+        // Si el nodo es -1, significa que estamos en una hoja y podemos insertar el nuevo registro
+        node = file.tellp(); // Obtenemos la posición actual del cursor en el archivo
+        NodeBT newNode(record);
+        newNode.pos = node; // Guardamos la posición del registro en el archivo
+        file.write((char*)&newNode, sizeof(NodeBT)); // Escribimos el nuevo nodo en el archivo
+    } else {
+        // Si no estamos en una hoja, seguimos buscando el lugar donde insertar el nuevo registro
+        NodeBT currentNode;
+        file.seekg(node);
+        file.read((char*)&currentNode, sizeof(NodeBT));
+        if (record.anime_id == currentNode.data.anime_id) {
+            std::cout << "El registro ya existe en el árbol" << std::endl;
+            return;
+        } else if (record.anime_id < currentNode.data.anime_id) {
+            insert(file, currentNode.left, record); // Si el nuevo registro es menor que el actual, vamos por la izquierda
+        } else {
+            insert(file, currentNode.right, record); // Si el nuevo registro es mayor que el actual, vamos por la derecha
+        }
+        // Actualizamos la altura del nodo actual
+        currentNode.height = std::max(getHeight(file, currentNode.left), getHeight(file, currentNode.right)) + 1;
+        // Rebalanceamos el árbol si es necesario
+        balance(file, node);
+        // Guardamos los cambios en el archivo
+        file.seekp(node);
+        file.write((char*)&currentNode, sizeof(NodeBT));
+    }
+}
+
+
+long AVLFile::getHeight(std::fstream& file, long node) {
+    if (node == -1) {
+        return 0; // Si el nodo es nulo, su altura es 0
+    } else {
+        NodeBT currentNode;
+        file.seekg(node);
+        file.read((char*)&currentNode, sizeof(NodeBT));
+        return currentNode.height; // Si el nodo no es nulo, su altura es el valor del campo "height" del nodo
     }
 }
 
@@ -254,12 +316,11 @@ void AVLFile::rangeSearch(std::fstream &file ,long& record_pos, int begin_key, i
 
 void AVLFile::update_height(std::fstream& file, long record_pos) {
     if (record_pos == -1)
-        throw "Archivo Vacio";
+        return ;
 
     // Leemos los datos desde el archivo
     NodeBT node;
     file.seekg(record_pos * sizeof(NodeBT));
-    // Intentar por la tecnica del empaquetado
     file.read((char*)&node, sizeof(NodeBT));
 
     // Calculamos la altura entre el izq y der luego calculamos el maximo de ellos
@@ -273,10 +334,10 @@ void AVLFile::update_height(std::fstream& file, long record_pos) {
 long AVLFile:: height (std::fstream& file , long record_pos ) {
     long height = 0;
     if (record_pos == -1)
-        throw "Archivo Vacio";
+        return 0;
     else {
         NodeBT node;
-        file.seekg(node.left * sizeof(NodeBT));
+        file.seekg(record_pos * sizeof(NodeBT));
         file.read((char*)&node, sizeof(NodeBT));
         height = node.height;
     }
@@ -288,7 +349,7 @@ long AVLFile::calculate_balance_factor(std::fstream& file , NodeBT node ){
     return balance_factor;
 }
 
-void AVLFile::balance( std::fstream &file , long &node_pos) {
+/* void AVLFile::balance( std::fstream &file , long &node_pos) {
     NodeBT node;
     file.seekg(node_pos * sizeof(NodeBT));
 
@@ -331,6 +392,112 @@ void AVLFile::balance( std::fstream &file , long &node_pos) {
     }
     //valid_balance_recursive(file , node_pos);
 
+}
+ */
+void AVLFile::balance(std::fstream& file, long& node) {
+    NodeBT currentNode;
+    file.seekg(node);
+    file.read((char*)&currentNode, sizeof(NodeBT));
+
+    // Obtenemos las alturas de los subárboles izquierdo y derecho
+    long heightLeft = getHeight(file, currentNode.left);
+    long heightRight = getHeight(file, currentNode.right);
+
+    // Calculamos el factor de balance del nodo actual
+    long balanceFactor = heightRight - heightLeft;
+
+    // Si el factor de balance está fuera de los límites (-1, 0, 1), el árbol está desequilibrado
+    if (balanceFactor < -1 || balanceFactor > 1) {
+        // Si el subárbol derecho es más alto, realizamos una rotación simple o doble hacia la izquierda
+        if (balanceFactor > 0) {
+            NodeBT rightNode;
+            file.seekg(currentNode.right);
+            file.read((char*)&rightNode, sizeof(NodeBT));
+
+            long heightRightLeft = getHeight(file, rightNode.left);
+            long heightRightRight = getHeight(file, rightNode.right);
+
+            if (heightRightLeft > heightRightRight) {
+                rotateRight(file, currentNode.right);
+            }
+
+            rotateLeft(file, node);
+
+        // Si el subárbol izquierdo es más alto, realizamos una rotación simple o doble hacia la derecha
+        } else {
+            NodeBT leftNode;
+            file.seekg(currentNode.left);
+            file.read((char*)&leftNode, sizeof(NodeBT));
+
+            long heightLeftLeft = getHeight(file, leftNode.left);
+            long heightLeftRight = getHeight(file, leftNode.right);
+
+            if (heightLeftRight > heightLeftLeft) {
+                rotateLeft(file, currentNode.left);
+            }
+
+            rotateRight(file, node);
+        }
+
+        // Después de la rotación, actualizamos las alturas del nodo y sus hijos
+        currentNode.height = 1 + std::max(getHeight(file, currentNode.left), getHeight(file, currentNode.right));
+
+        NodeBT leftChild, rightChild;
+        file.seekg(currentNode.left);
+        file.read((char*)&leftChild, sizeof(NodeBT));
+        file.seekg(currentNode.right);
+        file.read((char*)&rightChild, sizeof(NodeBT));
+
+        leftChild.height = 1 + std::max(getHeight(file, leftChild.left), getHeight(file, leftChild.right));
+        rightChild.height = 1 + std::max(getHeight(file, rightChild.left), getHeight(file, rightChild.right));
+
+        file.seekp(currentNode.pos);
+        file.write((char*)&currentNode, sizeof(NodeBT));
+        file.seekp(leftChild.pos);
+        file.write((char*)&leftChild, sizeof(NodeBT));
+        file.seekp(rightChild.pos);
+        file.write((char*)&rightChild, sizeof(NodeBT));
+    }
+}
+void AVLFile::rotateLeft(std::fstream& file, long& node) {
+    NodeBT tmpNode = readNode(file, node);
+    NodeBT rightNode = readNode(file, tmpNode.right);
+    
+    tmpNode.right = rightNode.left;
+    rightNode.left = node;
+
+    tmpNode.height = 1 + std::max(getHeight(file, tmpNode.left), getHeight(file, tmpNode.right));
+    rightNode.height = 1 + std::max(getHeight(file, rightNode.left), getHeight(file, rightNode.right));
+    
+    writeNode(file, node, rightNode);
+    writeNode(file, tmpNode.pos, tmpNode);
+    node = rightNode.pos;
+}
+void AVLFile::rotateRight(std::fstream& file, long& node) {
+    NodeBT tmpNode = readNode(file, node);
+    NodeBT leftNode = readNode(file, tmpNode.left);
+    
+    tmpNode.left = leftNode.right;
+    leftNode.right = node;
+
+    tmpNode.height = 1 + std::max(getHeight(file, tmpNode.left), getHeight(file, tmpNode.right));
+    leftNode.height = 1 + std::max(getHeight(file, leftNode.left), getHeight(file, leftNode.right));
+    
+    writeNode(file, node, leftNode);
+    writeNode(file, tmpNode.pos, tmpNode);
+    node = leftNode.pos;
+}
+void AVLFile::writeNode(std::fstream& file, long pos, const NodeBT& node) {
+    file.seekp(pos * sizeof(NodeBT));
+    file.write(reinterpret_cast<const char*>(&node), sizeof(NodeBT));
+}
+
+AVLFile::NodeBT AVLFile::readNode(std::fstream& file, long pos) {
+    NodeBT node;
+    file.seekg(pos * sizeof(NodeBT));
+    file.read(reinterpret_cast<char*>(&node), sizeof(NodeBT));
+    node.pos = pos;
+    return node;
 }
 
 void AVLFile::left_rotation( std::fstream &file ,long &node_pos) {
