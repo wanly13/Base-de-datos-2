@@ -37,6 +37,9 @@ int main(){
     AVLFile avl_file;
     read_write_dataset("animedata2.csv", "animedata_avl.dat", avl_file);
 
+
+    // Buscar  
     //write_demo();
     read_binary_avl();
+    avl_file.find(33876);
 }

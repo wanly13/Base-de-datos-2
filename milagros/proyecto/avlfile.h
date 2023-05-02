@@ -105,10 +105,8 @@ private:
     void rangeSearch(std::fstream &file ,long& record_pos, int begin_key, int end_key , std::vector<Record> &results);
 
     Record search(std::fstream &file, long& record_pos, int key);
-    //void insert(std::fstream &file, long& record_pos, const long& parent_pos, Record& record, long& pos);
+    
     void insert(std::fstream &file, long& record_pos , Record& record);
-    //void insert(std::fstream &file , long &node_pos, Record &value , bool sit);
-
     //long remove(std::fstream &file, long record_pos, char value[5]);
 
     //int update_height(long record_pos, std::fstream &file);
@@ -144,10 +142,10 @@ private:
 
 Record AVLFile::find(std::ifstream &file, long record_pos, int value){
     if (record_pos == -1)
-        throw "Archivo Vacio";
+        cout<< "Archivo Vacio";
     else {
         NodeBT temp;
-        file.seekg(record_pos * sizeof(NodeBT)); // Nos ubicamos en la posicion
+        file.seekg(record_pos ); // Nos ubicamos en la posicion
         file.read((char*)&temp, sizeof(NodeBT));
 
         if (value < temp.data.anime_id)
@@ -202,64 +200,15 @@ void AVLFile::insert(std::fstream& file, long& node, Record& record) {
     }
 }
 
-/* void AVLFile::insert(std::fstream& file, long& node, Record& record , bool sit) {
-    if (node == -1) {
-        file.seekp(0, ios::end); // Necesario
-        node = file.tellp(); // Obtenemos la posición actual del cursor en el archivo
-        cout<< "Ubicacion a insertar: " << node << endl;       
-        NodeBT newNode(record);
-        newNode.pos = node; // Guardamos la posición del registro en el archivo
-        //newNode.print_node();
-        cout<<"Donde se escribe el registro: "<<file.tellg()<<endl;
-
-        file.write((char*)&newNode, sizeof(NodeBT)); // Escribimos el nuevo nodo en el archivo
-
-        cout<<"Despues de escribir: "<<file.tellg()<<endl;
-
-        if(node > 0) {
-            long padre_pos = node - sizeof(NodeBT);
-            NodeBT parent;// Leemos el node actual anterior
-            file.seekg(padre_pos , ios::beg);
-            file.read((char*)&parent, sizeof(NodeBT));
-            (sit) ? parent.left = node : parent.right = node;
-            file.seekp(padre_pos, ios::beg);
-            file.write((char*)&parent, sizeof(NodeBT));
-        }
-    } else {
-        NodeBT currentNode;// Leemos el node actual anterior
-        file.seekg(node , ios::beg);
-        file.read((char*)&currentNode, sizeof(NodeBT));
-        if (record.anime_id == currentNode.data.anime_id) {
-            std::cout << "El registro ya existe en el árbol" << std::endl;
-            return;
-        } else if (record.anime_id < currentNode.data.anime_id) {
-            insert(file, currentNode.left, record , true); 
-
-        } else {
-            insert(file, currentNode.right, record , false); 
-
-        }
-        // Actualizamos la altura del nodo actual
-        //update_height( file , node);
-        currentNode.height = std::max(height(file, currentNode.left), height(file, currentNode.right)) + 1;
-        // Rebalanceamos el árbol si es necesario
-        balance(file, node);
-        // Guardamos los cambios en el archivo
-        file.seekp(node , ios::beg);
-        file.write((char*)&currentNode, sizeof(NodeBT));
-    }
-} */
-
-
 long AVLFile::height(std::fstream& file, long node) {
 
     if (node == -1) {
-        return -1; // Si el nodo es nulo, su altura es 0
+        return 0; // Si el nodo es nulo, su altura es 0
     } else {
         NodeBT currentNode;
         file.seekg(node , ios::beg);
         file.read((char*)&currentNode, sizeof(NodeBT));
-        cout<<"height: "<<currentNode.height<<endl;
+        //cout<<"height: "<<currentNode.height<<endl;
         return currentNode.height; 
     }
 }
