@@ -175,7 +175,7 @@ void AVLFile::insert(std::fstream& file, long& node, Record& record) {
         cout<< "Ubicacion a insertar: " << node << endl;       
         NodeBT newNode(record);
         newNode.pos = node; // Guardamos la posición del registro en el archivo
-        //newNode.print_node();
+        newNode.print_node();
         file.write((char*)&newNode, sizeof(NodeBT)); // Escribimos el nuevo nodo en el archivo
     } else {
         NodeBT currentNode;// Leemos el node actual anterior
@@ -257,7 +257,7 @@ long AVLFile::height(std::fstream& file, long node) {
         return -1; // Si el nodo es nulo, su altura es 0
     } else {
         NodeBT currentNode;
-        file.seekg(node);
+        file.seekg(node , ios::beg);
         file.read((char*)&currentNode, sizeof(NodeBT));
         cout<<"height: "<<currentNode.height<<endl;
         return currentNode.height; 
@@ -411,7 +411,7 @@ long AVLFile::calculate_balance_factor(std::fstream& file , NodeBT node ){
     return balance_factor;
 }
 
-void AVLFile::balance( std::fstream &file , long &node_pos) {
+/* void AVLFile::balance( std::fstream &file , long &node_pos) {
     cout<<"...Balanceamos..."<<endl;
 
     NodeBT node;
@@ -462,9 +462,9 @@ void AVLFile::balance( std::fstream &file , long &node_pos) {
     //valid_balance_recursive(file , node_pos);
 
 }
-
-/* void AVLFile::balance(std::fstream& file, long& node) {
-    cout<<"...Balanceamos..."<<endl;
+ */
+void AVLFile::balance(std::fstream& file, long& node) {
+    
     NodeBT currentNode;
     file.seekg(node);
     file.read((char*)&currentNode, sizeof(NodeBT));
@@ -472,7 +472,7 @@ void AVLFile::balance( std::fstream &file , long &node_pos) {
     // Obtenemos las alturas de los subárboles izquierdo y derecho
     long heightLeft = height(file, currentNode.left);
     long heightRight = height(file, currentNode.right);
-    cout<<"hl - hr: " << heightLeft << " - " <<heightRight << endl;
+    cout<<"hl - hr: (" << heightLeft << ") - (" <<heightRight <<")"<< endl;
 
     // Calculamos el factor de balance del nodo actual
     long balanceFactor = heightRight - heightLeft;
@@ -480,6 +480,7 @@ void AVLFile::balance( std::fstream &file , long &node_pos) {
 
     // Si el factor de balance está fuera de los límites (-1, 0, 1), el árbol está desequilibrado
     if (balanceFactor < -1 || balanceFactor > 1) {
+        cout<<"...Balanceamos..."<<endl;
         // Si el subárbol derecho es más alto, realizamos una rotación simple o doble hacia la izquierda
         if (balanceFactor > 0) {
             NodeBT rightNode;
@@ -530,7 +531,7 @@ void AVLFile::balance( std::fstream &file , long &node_pos) {
         file.seekp(rightChild.pos);
         file.write((char*)&rightChild, sizeof(NodeBT));
     }
-} */
+}
 void AVLFile::rotateLeft(std::fstream& file, long& node) {
     NodeBT tmpNode = readNode(file, node);
     NodeBT rightNode = readNode(file, tmpNode.right);
