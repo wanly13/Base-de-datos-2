@@ -68,9 +68,9 @@ public:
     }
 
     void insert(Record& record) {
-        std::fstream file(this->filename, std::ios::in|std::ios::out|std::ios::binary | std::ios::app);
-        insert(file, this->root, record , true);
-        //insert(file, this->root, record );
+        std::fstream file(this->filename, std::ios::in|std::ios::out|std::ios::binary );
+        //insert(file, this->root, record , true);
+        insert(file, this->root, record );
         file.close();
     }
 
@@ -106,8 +106,8 @@ private:
 
     Record search(std::fstream &file, long& record_pos, int key);
     //void insert(std::fstream &file, long& record_pos, const long& parent_pos, Record& record, long& pos);
-    //void insert(std::fstream &file, long& record_pos , Record& record);
-    void insert(std::fstream &file , long &node_pos, Record &value , bool sit);
+    void insert(std::fstream &file, long& record_pos , Record& record);
+    //void insert(std::fstream &file , long &node_pos, Record &value , bool sit);
 
     //long remove(std::fstream &file, long record_pos, char value[5]);
 
@@ -168,7 +168,7 @@ Record AVLFile::find(std::ifstream &file, long record_pos, int value){
 }
  */
 
-/* void AVLFile::insert(std::fstream& file, long& node, Record& record) {
+void AVLFile::insert(std::fstream& file, long& node, Record& record) {
     if (node == -1) {
         file.seekp(0, ios::end); // Necesario
         node = file.tellp(); // Obtenemos la posición actual del cursor en el archivo
@@ -200,9 +200,9 @@ Record AVLFile::find(std::ifstream &file, long record_pos, int value){
         file.seekp(node , ios::beg);
         file.write((char*)&currentNode, sizeof(NodeBT));
     }
-} */
+}
 
-void AVLFile::insert(std::fstream& file, long& node, Record& record , bool sit) {
+/* void AVLFile::insert(std::fstream& file, long& node, Record& record , bool sit) {
     if (node == -1) {
         file.seekp(0, ios::end); // Necesario
         node = file.tellp(); // Obtenemos la posición actual del cursor en el archivo
@@ -245,10 +245,10 @@ void AVLFile::insert(std::fstream& file, long& node, Record& record , bool sit) 
         // Rebalanceamos el árbol si es necesario
         balance(file, node);
         // Guardamos los cambios en el archivo
-        //file.seekp(node , ios::beg);
-        //file.write((char*)&currentNode, sizeof(NodeBT));
+        file.seekp(node , ios::beg);
+        file.write((char*)&currentNode, sizeof(NodeBT));
     }
-}
+} */
 
 
 long AVLFile::height(std::fstream& file, long node) {
@@ -411,7 +411,7 @@ long AVLFile::calculate_balance_factor(std::fstream& file , NodeBT node ){
     return balance_factor;
 }
 
-/* void AVLFile::balance( std::fstream &file , long &node_pos) {
+void AVLFile::balance( std::fstream &file , long &node_pos) {
     cout<<"...Balanceamos..."<<endl;
 
     NodeBT node;
@@ -462,8 +462,8 @@ long AVLFile::calculate_balance_factor(std::fstream& file , NodeBT node ){
     //valid_balance_recursive(file , node_pos);
 
 }
- */
-void AVLFile::balance(std::fstream& file, long& node) {
+
+/* void AVLFile::balance(std::fstream& file, long& node) {
     cout<<"...Balanceamos..."<<endl;
     NodeBT currentNode;
     file.seekg(node);
@@ -530,7 +530,7 @@ void AVLFile::balance(std::fstream& file, long& node) {
         file.seekp(rightChild.pos);
         file.write((char*)&rightChild, sizeof(NodeBT));
     }
-}
+} */
 void AVLFile::rotateLeft(std::fstream& file, long& node) {
     NodeBT tmpNode = readNode(file, node);
     NodeBT rightNode = readNode(file, tmpNode.right);
