@@ -70,6 +70,7 @@ public:
     void insert(Record& record) {
         std::fstream file(this->filename, std::ios::in|std::ios::out|std::ios::binary | std::ios::app);
         insert(file, this->root, record , true);
+        //insert(file, this->root, record );
         file.close();
     }
 
@@ -80,12 +81,12 @@ public:
     }
 
 
-    vector<Record> search (Record key){
+   /*  Record search (Record key){
         std::ifstream file(this->filename, std::ios::binary);
-        vector<Record> result = search(file, this->root, key.anime_id);
+        Record result = search(file, this->root, key.anime_id);
         file.close();
         return result;
-    }
+    } */
 
     vector<Record> rangeSearch (Record& key1,Record& key2 ){
         vector<Record> results;
@@ -99,10 +100,11 @@ public:
 
 private:
     // FUNCTIONS TO USE
-    vector<Record> search(std::ifstream &file ,long record_pos, int animeid);
+    //vector<Record> search(std::ifstream &file ,long record_pos, int animeid);
 
     void rangeSearch(std::fstream &file ,long& record_pos, int begin_key, int end_key , std::vector<Record> &results);
 
+    Record search(std::fstream &file, long& record_pos, int key);
     //void insert(std::fstream &file, long& record_pos, const long& parent_pos, Record& record, long& pos);
     //void insert(std::fstream &file, long& record_pos , Record& record);
     void insert(std::fstream &file , long &node_pos, Record &value , bool sit);
@@ -243,8 +245,8 @@ void AVLFile::insert(std::fstream& file, long& node, Record& record , bool sit) 
         // Rebalanceamos el árbol si es necesario
         balance(file, node);
         // Guardamos los cambios en el archivo
-       /*  file.seekp(node , ios::beg);
-        file.write((char*)&currentNode, sizeof(NodeBT)); */
+        //file.seekp(node , ios::beg);
+        //file.write((char*)&currentNode, sizeof(NodeBT));
     }
 }
 
@@ -333,7 +335,7 @@ void AVLFile::rangeSearch(std::fstream &file ,long& record_pos, int begin_key, i
         throw "El archivo se encuentra vacío";
 
     NodeBT temp;
-    file.seekg(record_pos * sizeof(NodeBT)); // Nos ubicamos en el root
+    file.seekg(record_pos ); // Nos ubicamos en el root
     // IMplementar como cin operator
     file.read((char*)&temp, sizeof(NodeBT)); // Leemos el root
 
@@ -356,6 +358,25 @@ void AVLFile::rangeSearch(std::fstream &file ,long& record_pos, int begin_key, i
     // Un valor positivo: si la primera cadena es mayor que la segunda.
 
 }
+
+Record AVLFile::search(std::fstream &file, long& record_pos, int key) {
+    if (record_pos == -1)
+        throw "El archivo se encuentra vacío";
+
+    NodeBT temp;
+    file.seekg(record_pos);
+    file.read((char*)&temp, sizeof(NodeBT));
+
+    if (key == temp.data.anime_id)
+        return temp.data;
+    else if (key < temp.data.anime_id && temp.left != -1)
+        return search(file, temp.left, key);
+    else if (key > temp.data.anime_id && temp.right != -1)
+        return search(file, temp.right, key);
+    else
+        throw "El elemento no fue encontrado";
+}
+
 
 void AVLFile::update_height(std::fstream& file, long record_pos) {
   
@@ -390,12 +411,12 @@ long AVLFile::calculate_balance_factor(std::fstream& file , NodeBT node ){
     return balance_factor;
 }
 
-void AVLFile::balance( std::fstream &file , long &node_pos) {
+/* void AVLFile::balance( std::fstream &file , long &node_pos) {
     cout<<"...Balanceamos..."<<endl;
 
     NodeBT node;
     //file.seekg(node_pos * sizeof(NodeBT));
-    file.seekg(node_pos , ios::beg);
+    //file.seekg(node_pos , ios::beg);
 
     file.read((char*)&node, sizeof(NodeBT));// Empaquetado para el read
     // Obtenemos el factor de balanceo
@@ -441,8 +462,8 @@ void AVLFile::balance( std::fstream &file , long &node_pos) {
     //valid_balance_recursive(file , node_pos);
 
 }
-
-/* void AVLFile::balance(std::fstream& file, long& node) {
+ */
+void AVLFile::balance(std::fstream& file, long& node) {
     cout<<"...Balanceamos..."<<endl;
     NodeBT currentNode;
     file.seekg(node);
@@ -509,7 +530,7 @@ void AVLFile::balance( std::fstream &file , long &node_pos) {
         file.seekp(rightChild.pos);
         file.write((char*)&rightChild, sizeof(NodeBT));
     }
-} */
+}
 void AVLFile::rotateLeft(std::fstream& file, long& node) {
     NodeBT tmpNode = readNode(file, node);
     NodeBT rightNode = readNode(file, tmpNode.right);
