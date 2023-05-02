@@ -34,10 +34,10 @@ istream & operator >> (istream & stream, Record & p){
 
 ostream & operator << (ostream & stream, Record & p)
 {
-    stream << p.anime_id << "|";
-    stream << p.name << "|";
-    stream << p.type << "|";
-    stream << p.rating << "|";
+    stream << p.anime_id << " | ";
+    stream << p.name << " | ";
+    stream << p.type << " | ";
+    stream << p.rating << " | ";
     stream << p.members;
     stream << "\n";
     stream << flush;
@@ -62,11 +62,14 @@ void read_write_dataset(string filename, string avlfilename, AVLFile avl_file){
    
    // tellg:  posicion actual
     if (avlfile.tellg() == 0){
+        
         Record anime{};
         string line;
+        int cont = 0;
         getline(file, line); // Leemos toda la linea
         while (getline(file, line)){
-            cout<<"Insert: -> ";
+            cout<<endl<<"| ------------- " << ++cont << " ------------- |"<<endl;
+            cout<<endl<<"\nEntra: -> ";
             stringstream stream(line);
             stream >> anime;
             cout<<anime;

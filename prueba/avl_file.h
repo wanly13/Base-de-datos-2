@@ -1,27 +1,3 @@
-void AVL::insert(const Record& record) {
-    Node* new_node = new Node(record);
-
-    if (root == nullptr) {
-        root = new_node;
-        return;
-    }
-
-    Node* current = root;
-    Node* parent = nullptr;
-
-    while (true) {
-        if (current == nullptr) {
-            if (compare_records(record, parent->data) < 0) {
-                parent->left = new_node;
-            } else {
-                parent->right = new_node;
-            }
-            new_node->parent = parent;
-
-            update_heights(new_node);
-            rebalance(new_node);
-            break;
-        }
 class AVL {
 public:
     // Estructura para los registros
@@ -71,14 +47,36 @@ private:
     Record read_record(fstream& file, int offset);
 };
 
-        parent = current;
-
-        if (compare_records(record, current->data) < 0) {
-            current = current->left;
-        } else {
-            current = current->right;
-        }
+void AVL::insert(Record record) {
+    // Abrir el archivo en modo lectura y escritura
+    fstream file(filename, ios::in | ios::out | ios::binary);
+    if (!file.is_open()) {
+        // Si no se puede abrir el archivo, lanzar una excepción
+        throw runtime_error("No se pudo abrir el archivo");
     }
-
-    num_records++;
+    
+    // Calcular el tamaño del archivo y la posición donde se va a insertar el registro
+    file.seekg(0, ios::end);
+    int file_size = file.tellg();
+    int record_offset = file_size;
+    
+    // Escribir el registro en el archivo
+    write_record(file, record);
+    
+    // Insertar el registro en el árbol AVL
+    Node* new_node = new Node;
+    new_node->record = record;
+    new_node->left = nullptr;
+    new_node->right = nullptr;
+    new_node->height = 1;
+    root = insert_node(root, new_node);
+    
+    // Escribir la posición del registro en el archivo en el campo "offset" del registro
+    file.seekp(record_offset + offsetof(Record, offset));
+    file.write(reinterpret_cast<char*>(&record_offset), sizeof(record_offset));
+    
+    // Cerrar el archivo
+    file.close();
 }
+
+
