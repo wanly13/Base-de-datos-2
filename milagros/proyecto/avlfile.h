@@ -162,14 +162,14 @@ void AVLFile::insert(std::fstream& file, long& node, Record& record) {
     if (node == -1) {
         file.seekp(0, ios::end); // Necesario
         node = file.tellp(); // Obtenemos la posición actual del cursor en el archivo
-        if(file.tellp() == 0) {
+        /* if(file.tellp() == 0) {
             node = -1;
-        } else node = file.tellp();
-       /*  if (this -> root == -1) {
+        } else node = file.tellp(); */
+        /* if (this -> root == -1) {
                 // Si es el primer nodo, asignar su posición al atributo de la raíz
                 this -> root = node;
-                //file.seekp(0, ios::beg);
-                //file.write((char*)&root, sizeof(long));
+                file.seekp(0, ios::beg);
+                file.write((char*)&root, sizeof(long));
         } */
         /* this -> root = node; */
         cout<<"root es: "<<this -> root<<endl;
@@ -217,11 +217,12 @@ long AVLFile::height(std::fstream& file, long node) {
 }
 
 void AVLFile::remove(std::fstream& file, long& record_pos, int value) {
-    /* if (record_pos == -1) record_pos = 0;
+    
     if (record_pos == -1) {
+        record_pos = 0;
         std::cout << "El registro no se encuentra en el árbol" << std::endl;
         return;
-    } */
+    }
     NodeBT current_node;
     file.seekg(record_pos, std::ios::beg);
     file.read((char*)&current_node, sizeof(NodeBT));
@@ -311,6 +312,7 @@ AVLFile::NodeBT AVLFile::find_max(std::fstream& file, long record_pos) {
 
 void AVLFile::rangeSearch(fstream &file, long node, int begin_key, int end_key, vector<Record> &results) {
     if (node == -1) {
+        node = 0;
         return;
     }
     NodeBT current;
@@ -368,7 +370,7 @@ long AVLFile::calculate_balance_factor(std::fstream& file , NodeBT node ){
 void AVLFile::balance(std::fstream& file, long& node) {
     
     NodeBT currentNode;
-    file.seekg(node);
+    file.seekg(node , std::ios::beg);
     file.read((char*)&currentNode, sizeof(NodeBT));
 
     // Obtenemos las alturas de los subárboles izquierdo y derecho

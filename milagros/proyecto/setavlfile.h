@@ -92,8 +92,9 @@ void read_write_dataset(string filename, string avlfilename, AVLFile avl_file){
         cout<<record;
     }
 
-    /* cout<<endl<<"| ------------- REMOVE ------------- |"<<endl;
-    avl_file.remove(33872); */
+    cout<<endl<<"| ------------- REMOVE ------------- |"<<endl;
+    //avl_file.remove(33872);
+    //avl_file.remove(33876);
     
 }
 
