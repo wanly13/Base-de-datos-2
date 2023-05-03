@@ -104,28 +104,20 @@ public:
 
 private:
     // FUNCTIONS TO USE
-    //vector<Record> search(std::ifstream &file ,long record_pos, int animeid);
 
     void rangeSearch(fstream &file, long node, int begin_key, int end_key, vector<Record> &results);
 
     Record search(std::fstream &file, long& record_pos, int key);
     
     void insert(std::fstream &file, long& record_pos , Record& record);
-    //long remove(std::fstream &file, long record_pos, char value[5]);
 
-    //int update_height(long record_pos, std::fstream &file);
     void update_height(std::fstream& file, long node_pos);
 
     long height (std::fstream& file , long record_pos );
-    //void update_balance_factor(long record_pos, std::fstream &file);
 
     long calculate_balance_factor(std::fstream& file , NodeBT node );
 
     void balance( std::fstream &file , long &node_pos);
-
-    void left_rotation( std::fstream &file ,long &node_pos);
-
-    void right_rotation( std::fstream &file ,long &node_pos);
 
     long maxValue(long node_pos, std::fstream &file);
 
@@ -133,13 +125,14 @@ private:
 
     Record find(std::ifstream &file, long record_pos, int value);
 
-    void valid_balance_recursive(std::fstream &file, long record_pos);
-    // otros
-    //long height(std::fstream& file, long node);
     void rotateLeft(std::fstream& file, long& node) ;
+
     void rotateRight(std::fstream& file, long& node);
+
     void writeNode(std::fstream& file, long pos, const NodeBT& node);
+
     AVLFile::NodeBT readNode(std::fstream& file, long pos);
+
     AVLFile::NodeBT find_predecessor(std::fstream& file, long& record_pos, NodeBT& predecessor);
     
     AVLFile::NodeBT find_max(std::fstream& file, long record_pos);
@@ -316,7 +309,6 @@ AVLFile::NodeBT AVLFile::find_max(std::fstream& file, long record_pos) {
     return currentNode;
 }
 
-
 void AVLFile::rangeSearch(fstream &file, long node, int begin_key, int end_key, vector<Record> &results) {
     if (node == -1) {
         return;
@@ -353,7 +345,6 @@ Record AVLFile::search(std::fstream &file, long& record_pos, int key) {
         throw "El elemento no fue encontrado";
 }
 
-
 void AVLFile::update_height(std::fstream& file, long record_pos) {
   
     // Leemos los datos desde el archivo
@@ -367,7 +358,6 @@ void AVLFile::update_height(std::fstream& file, long record_pos) {
    /*  file.seekp(record_pos * sizeof(NodeBT) + offsetof(NodeBT, height));//offsetof : guarda el desplazamiento, en este caso guarda el desplazamiento de height
     file.write((char*)&node.height, sizeof(node.height)); */
 }
-
 
 long AVLFile::calculate_balance_factor(std::fstream& file , NodeBT node ){
     long balance_factor = height(file , node.left) - height(file , node.right);
@@ -485,62 +475,6 @@ AVLFile::NodeBT AVLFile::readNode(std::fstream& file, long pos) {
     return node;
 }
 
-void AVLFile::left_rotation( std::fstream &file ,long &node_pos) {
-    cout<<"left_rotation: "<<endl;
-    NodeBT node, right_node;
-    // Nos ubicamos en la posicion del nodo
-    //file.seekg(node_pos * sizeof(NodeBT));
-    file.seekg(node_pos );
-    file.read((char*)&node, sizeof(NodeBT)); // leemos el nodo (Empaquetar)
 
-    // Nos ubicamos en la posicion del hijo derecho
-    //file.seekg(node.right * sizeof(NodeBT));
-    file.seekg(node.right );
-    file.read((char*)&right_node, sizeof(NodeBT));// leemos al hijo (Empaquetar)
-
-    node.right = right_node.left;
-    right_node.left = node_pos;
-
-    node.height =  std::max(height(file , node.left), height(file , node.right)) + 1 ;
-    right_node.height =  std::max(height(file , right_node.left), height(file , right_node.right)) + 1 ;
-
-    //file.seekp(node_pos * sizeof(NodeBT)); 
-    file.seekp(node_pos );  
-    file.write((char*)&node, sizeof(NodeBT));
-
-    //file.seekp(right_node.pos  * sizeof(NodeBT)); 
-    file.seekp(right_node.pos); 
-    file.write((char*)&right_node, sizeof(NodeBT));
-    node_pos = right_node.pos ;
-}
-
-void AVLFile::right_rotation( std::fstream &file ,long &node_pos) {
-    cout<<"right_rotation: "<<endl;
-    NodeBT node, left_node;
-
-    //file.seekg(node_pos * sizeof(NodeBT));
-    file.seekg(node_pos );
-    file.read((char*)&node, sizeof(NodeBT));
-
-    //file.seekg(node.left * sizeof(NodeBT));
-    file.seekg(node.left );
-    file.read((char*)&left_node, sizeof(NodeBT));
-
-    node.left = left_node.right;
-    left_node.right = node_pos;
-
-    node.height =  std::max(height(file , node.left), height(file , node.right)) + 1 ;
-    left_node.height =  std::max(height(file , left_node.left), height( file , left_node.right)) + 1;
-
-    //file.seekp(node_pos * sizeof(NodeBT));
-    file.seekp(node_pos );
-    file.write((char*)&node, sizeof(NodeBT));
-
-    //file.seekp(left_node.pos * sizeof(NodeBT));
-    file.seekp(left_node.pos );
-    file.write((char*)&left_node, sizeof(NodeBT));
-
-    node_pos = left_node.pos;
-}
 
 #endif //RECORDLECTURE_AVLFILE_H
