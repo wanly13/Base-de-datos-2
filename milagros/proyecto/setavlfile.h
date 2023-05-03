@@ -75,11 +75,26 @@ void read_write_dataset(string filename, string avlfilename, AVLFile avl_file){
             cout<<anime;
             avl_file.insert(anime);// Insertamos al AVL si es que existe
         }
+        cout<<"root final: "; avl_file.getDates();
         cout<<"\nFin de Lectura\n";
 
     }
     else ayudame_Dios("El archivo ya ha sido llenado inicialmente");
     file.close();
+
+    // BUSCAR
+    cout<<endl<<"| ------------- SEARCH ------------- |"<<endl;
+    avl_file.find(33876);
+
+    cout<<endl<<"| ------------- RANGE SEARCH ------------- |"<<endl;
+    vector<Record> results = avl_file.rangeSearch(33874 , 33876);
+    for (auto record:results) {
+        cout<<record;
+    }
+
+    /* cout<<endl<<"| ------------- REMOVE ------------- |"<<endl;
+    avl_file.remove(33872); */
+    
 }
 
 

@@ -2,10 +2,10 @@
 // Created by milagros on 4/28/23.
 //
 
-#ifndef RECORDLECTURE_RECORD_H
-#define RECORDLECTURE_RECORD_H
+#ifndef RECORD_H
+#define RECORD_H
 
-#endif //RECORDLECTURE_RECORD_H
+
 
 #include <fstream>
 #include <iostream>
@@ -55,6 +55,10 @@ public:
         cin >> members;
 
     }
-  
+    
+    void get_data (){
+        cout<<anime_id << " | " << name << " | " << type << " | " << episodes << " | " << rating << " | " << members<<endl;
+    }
 
 };
+#endif //RECORD_H

@@ -62,7 +62,9 @@ public:
 
     Record find(int animeid) {
         std::ifstream file(this->filename, std::ios::binary);
+        cout<<"root que pasa: "<<this->root<<endl;
         Record result = find(file, this->root, animeid); // El root puede cambiar o solo es -1 cuando no tiene valores el archivo?
+        result.get_data();
         file.close();
         return result;
     }
@@ -74,9 +76,9 @@ public:
         file.close();
     }
 
-    void remove(Record& record) {
-        std::fstream file(this->filename, std::ios::in|std::ios::out|std::ios::binary | std::ios::app);
-        remove(file, this->root, record.anime_id);
+    void remove(int anime_id) {
+        std::fstream file(this->filename, std::ios::in|std::ios::out|std::ios::binary );
+        remove(file, this -> root, anime_id);
         file.close();
     }
 
@@ -88,13 +90,15 @@ public:
         return result;
     } */
 
-    vector<Record> rangeSearch (Record& key1,Record& key2 ){
+    vector<Record> rangeSearch(int begin_key, int end_key) {
         vector<Record> results;
-        std::fstream file(this->filename, std::ios::in|std::ios::out|std::ios::binary | std::ios::app);
-
-        rangeSearch(file, this->root, key1.anime_id, key2.anime_id, results);
-
-        file.close();
+        fstream file(filename, ios::in | ios::binary);
+        if (file) {
+            rangeSearch(file, root, begin_key, end_key, results);
+            file.close();
+        } else {
+            cout << "Error al abrir el archivo " << filename << endl;
+        }
         return results;
     }
 
@@ -102,7 +106,7 @@ private:
     // FUNCTIONS TO USE
     //vector<Record> search(std::ifstream &file ,long record_pos, int animeid);
 
-    void rangeSearch(std::fstream &file ,long& record_pos, int begin_key, int end_key , std::vector<Record> &results);
+    void rangeSearch(fstream &file, long node, int begin_key, int end_key, vector<Record> &results);
 
     Record search(std::fstream &file, long& record_pos, int key);
     
@@ -125,7 +129,7 @@ private:
 
     long maxValue(long node_pos, std::fstream &file);
 
-    void remove( std::fstream &file , long &node_pos, int value);
+    void remove(std::fstream& file, long& record_pos, int value);
 
     Record find(std::ifstream &file, long record_pos, int value);
 
@@ -136,40 +140,46 @@ private:
     void rotateRight(std::fstream& file, long& node);
     void writeNode(std::fstream& file, long pos, const NodeBT& node);
     AVLFile::NodeBT readNode(std::fstream& file, long pos);
+    AVLFile::NodeBT find_predecessor(std::fstream& file, long& record_pos, NodeBT& predecessor);
+    
+    AVLFile::NodeBT find_max(std::fstream& file, long record_pos);
 };
 
 // ------------------ IMPLEMENTATIONS ------------------
 
 Record AVLFile::find(std::ifstream &file, long record_pos, int value){
-    if (record_pos == -1)
-        cout<< "Archivo Vacio";
-    else {
-        NodeBT temp;
-        file.seekg(record_pos ); // Nos ubicamos en la posicion
-        file.read((char*)&temp, sizeof(NodeBT));
+    NodeBT temp;
+    file.seekg(record_pos ); // Nos ubicamos en la posición actual
+    file.read((char*)&temp, sizeof(NodeBT));
 
-        if (value < temp.data.anime_id)
-            return find(file, temp.left, value);
-        else if (value > temp.data.anime_id)
-            return find(file, temp.right, value);
-        else
-            return temp.data;
+    if (temp.pos == -1) {
+        // El archivo está vacío o no se encontró el valor buscado
+        return Record(); // Retorna un registro vacío
     }
-}
 
-/* void AVLFile:: valid_balance_recursive(std::fstream &file, long record_pos) {
-    NodeBT parent;
-    file.seekg(record_pos * sizeof(NodeBT));
-    file.read((char*)&parent, sizeof(NodeBT));
-
-    if(parent.)
+    if (value < temp.data.anime_id)
+        return find(file, temp.left, value);
+    else if (value > temp.data.anime_id)
+        return find(file, temp.right, value);
+    else
+        return temp.data;
 }
- */
 
 void AVLFile::insert(std::fstream& file, long& node, Record& record) {
     if (node == -1) {
         file.seekp(0, ios::end); // Necesario
         node = file.tellp(); // Obtenemos la posición actual del cursor en el archivo
+        if(file.tellp() == 0) {
+            node = -1;
+        } else node = file.tellp();
+       /*  if (this -> root == -1) {
+                // Si es el primer nodo, asignar su posición al atributo de la raíz
+                this -> root = node;
+                //file.seekp(0, ios::beg);
+                //file.write((char*)&root, sizeof(long));
+        } */
+        /* this -> root = node; */
+        cout<<"root es: "<<this -> root<<endl;
         cout<< "Ubicacion a insertar: " << node << endl;       
         NodeBT newNode(record);
         newNode.pos = node; // Guardamos la posición del registro en el archivo
@@ -213,99 +223,116 @@ long AVLFile::height(std::fstream& file, long node) {
     }
 }
 
-void AVLFile::remove( std::fstream &file , long &node_pos, int value) {
-    if (node_pos == -1) {
-        throw "Registro no encontrado";
-    }
-    NodeBT node;
-    file.seekg(node_pos * sizeof(NodeBT));
-    file.read((char*)&node, sizeof(NodeBT));
-
-    if (value < node.data.anime_id) {
-        remove(file ,node.left, value);
-    }
-    else if (value > node.data.anime_id) {
-        remove(file ,node.right, value);
-    }
-    else { // se encontró el nodo a eliminar
-        if (node.left == -1 && node.right == -1) { // caso 1: el nodo no tiene hijos
-            file.seekp(node_pos * sizeof(NodeBT));
-            NodeBT delete_node;// Record data_vacia;
-            delete_node.data = Record ();
-            delete_node.left = -1;
-            delete_node.right = -1;
-            delete_node.height = 0;
-
-            // Escribimos el nodo borrado
-            file.write((char*)&delete_node, sizeof(NodeBT));
-            node_pos = -1; // Ya no esta en uso (Se considera como espacio libre)
-            return; // Aqui termina la ejecicion ya que solo tiene un hijo
-        }
-        else if (node.left == -1 || node.right == -1) { // caso 2: el nodo tiene un solo hijo
-            long child_pos = node.left == -1 ? node.right : node.left; // Igual al de el ejemplo pero optimizado
-
-            file.seekp(node_pos * sizeof(NodeBT));
-            file.write((char*)&child_pos, sizeof(long));
-
-            node_pos = child_pos;
-        }
-        else { // caso 3: el nodo tiene dos hijos
-            long max_pos = maxValue(node.left, file);
-            NodeBT max_node;
-            file.seekg(max_pos * sizeof(NodeBT));
-            file.read((char*)&max_node, sizeof(NodeBT));
-
-            node.data = max_node.data;
-            remove(file , node.left, max_node.data.anime_id);
+void AVLFile::remove(std::fstream& file, long& record_pos, int value) {
+    /* if (record_pos == -1) record_pos = 0;
+    if (record_pos == -1) {
+        std::cout << "El registro no se encuentra en el árbol" << std::endl;
+        return;
+    } */
+    NodeBT current_node;
+    file.seekg(record_pos, std::ios::beg);
+    file.read((char*)&current_node, sizeof(NodeBT));
+    if (value < current_node.data.anime_id) {
+        remove(file, current_node.left, value);
+    } else if (value > current_node.data.anime_id) {
+        remove(file, current_node.right, value);
+    } else {
+        // Caso en el que se encuentra el valor a eliminar
+        if (current_node.left == -1 && current_node.right == -1) {
+            // Caso 1: El nodo a eliminar es una hoja
+            record_pos = -1;
+            balance(file, record_pos);
+            file.seekp(0, std::ios::beg);
+            file.write((char*)&root, sizeof(long));
+        } else if (current_node.left == -1 || current_node.right == -1) {
+            // Caso 2: El nodo a eliminar tiene un solo hijo
+            record_pos = (current_node.left != -1) ? current_node.left : current_node.right;
+            balance(file, record_pos);
+            file.seekp(0, std::ios::beg);
+            file.write((char*)&root, sizeof(long));
+        } else {
+            // Caso 3: El nodo a eliminar tiene dos hijos
+            NodeBT predecessor;
+            find_predecessor(file, current_node.left, predecessor);
+            current_node.data = predecessor.data;
+            remove(file, current_node.left, predecessor.data.anime_id);
+            file.seekp(record_pos, std::ios::beg);
+            file.write((char*)&current_node, sizeof(NodeBT));
         }
     }
-    update_height( file , node_pos);
-    balance( file , node_pos);
+    // Actualizamos la altura del nodo actual
+    current_node.height = std::max(height(file, current_node.left), height(file, current_node.right)) + 1;
+    // Rebalanceamos el árbol si es necesario
+    balance(file, record_pos);
+    // Guardamos los cambios en el archivo
+    file.seekp(record_pos, std::ios::beg);
+    file.write((char*)&current_node, sizeof(NodeBT));
 }
 
-long AVLFile::maxValue(long node_pos, std::fstream &file){
-    if (node_pos == -1)
-        throw "Registro no encontrado";
+AVLFile::NodeBT AVLFile::find_predecessor(std::fstream& file, long& record_pos, NodeBT& predecessor) {
+    NodeBT currentNode;
+    file.seekg(record_pos); // Nos ubicamos en el nodo actual
+    file.read((char*)&currentNode, sizeof(NodeBT));
 
-    NodeBT node;
-    file.seekg(node_pos * sizeof(NodeBT));
-    file.read((char*)&node, sizeof(NodeBT));
-
-    while (node.right != -1) {
-        node_pos = node.right;
-        file.seekg(node_pos * sizeof(NodeBT));
-        file.read((char*)&node, sizeof(NodeBT));
+    // Si hay un subárbol izquierdo, el predecesor es el nodo más grande de ese subárbol
+    if (currentNode.left != -1) {
+        return find_max(file, currentNode.left);
     }
-    return node_pos; // Para este caso necesitamos la posicion ya que se usa para leer la data
+
+    // Si no hay un subárbol izquierdo, buscamos el primer ancestro que sea el hijo derecho de su padre
+    // El predecesor es el padre de ese nodo
+    while (true) {
+        long parent_pos = currentNode.pos;
+        if (parent_pos == -1) {
+            // No hay predecesor
+            return NodeBT();
+        }
+        NodeBT parent;
+        file.seekg(parent_pos); // Nos ubicamos en el padre del nodo actual
+        file.read((char*)&parent, sizeof(NodeBT));
+        if (parent.right == record_pos) {
+            // El nodo actual es el hijo derecho del padre
+            // El predecesor es el padre
+            predecessor = parent;
+            return parent;
+        }
+        // Si no es el hijo derecho, seguimos subiendo en el árbol
+        currentNode = parent;
+        record_pos = parent_pos;
+    }
 }
 
-void AVLFile::rangeSearch(std::fstream &file ,long& record_pos, int begin_key, int end_key , std::vector<Record> &results){
-    if (record_pos == -1)
-        throw "El archivo se encuentra vacío";
+AVLFile::NodeBT AVLFile::find_max(std::fstream& file, long record_pos) {
+    NodeBT currentNode;
+    file.seekg(record_pos); // Nos ubicamos en el nodo actual
+    file.read((char*)&currentNode, sizeof(NodeBT));
 
-    NodeBT temp;
-    file.seekg(record_pos ); // Nos ubicamos en el root
-    // IMplementar como cin operator
-    file.read((char*)&temp, sizeof(NodeBT)); // Leemos el root
-
-    // SI estamos dentro del rango  agregamos
-    if (temp.data.anime_id, begin_key >= 0 && temp.data.anime_id, end_key <= 0) {
-        results.push_back(temp.data);
+    while (currentNode.right != -1) {
+        // Seguimos bajando por el subárbol derecho
+        file.seekg(currentNode.right);
+        file.read((char*)&currentNode, sizeof(NodeBT));
     }
 
-    // buscamos por izquierda
-    if (temp.data.anime_id, begin_key > 0) {
-        rangeSearch(file, temp.left, begin_key, end_key, results);
-    }
+    return currentNode;
+}
 
-    // buscamos por derecha
-    if (temp.data.anime_id, end_key < 0) {
-        rangeSearch(file, temp.right, begin_key, end_key, results);
-    }
-    // strcmp:  0: si ambas cadenas son iguales.
-    // Un valor negativo: si la primera cadena es menor que la segunda.
-    // Un valor positivo: si la primera cadena es mayor que la segunda.
 
+void AVLFile::rangeSearch(fstream &file, long node, int begin_key, int end_key, vector<Record> &results) {
+    if (node == -1) {
+        return;
+    }
+    NodeBT current;
+    file.seekg(node);
+    file.read((char*)&current, sizeof(NodeBT));
+    if (current.data.anime_id >= begin_key && current.data.anime_id <= end_key) {
+        results.push_back(current.data);
+    }
+    if (current.data.anime_id > begin_key) {
+        rangeSearch(file, current.left, begin_key, end_key, results);
+    }
+    if (current.data.anime_id < end_key) {
+        rangeSearch(file, current.right, begin_key, end_key, results);
+    }
 }
 
 Record AVLFile::search(std::fstream &file, long& record_pos, int key) {
@@ -341,18 +368,6 @@ void AVLFile::update_height(std::fstream& file, long record_pos) {
     file.write((char*)&node.height, sizeof(node.height)); */
 }
 
-/* long AVLFile:: height (std::fstream& file , long record_pos ) {
-    if (record_pos == -1) {
-        return 0; // Si el nodo es nulo, su altura es 0
-    } else {
-        NodeBT currentNode;
-        file.seekg(record_pos);
-        cout<<"height: "<<record_pos<<endl;
-
-        file.read((char*)&currentNode, sizeof(NodeBT));
-        return currentNode.height; // Si el nodo no es nulo, su altura es el valor del campo "height" del nodo
-    }
-} */
 
 long AVLFile::calculate_balance_factor(std::fstream& file , NodeBT node ){
     long balance_factor = height(file , node.left) - height(file , node.right);
@@ -360,58 +375,6 @@ long AVLFile::calculate_balance_factor(std::fstream& file , NodeBT node ){
     return balance_factor;
 }
 
-/* void AVLFile::balance( std::fstream &file , long &node_pos) {
-    cout<<"...Balanceamos..."<<endl;
-
-    NodeBT node;
-    //file.seekg(node_pos * sizeof(NodeBT));
-    //file.seekg(node_pos , ios::beg);
-
-    file.read((char*)&node, sizeof(NodeBT));// Empaquetado para el read
-    // Obtenemos el factor de balanceo
-    long factor_balanceo = calculate_balance_factor( file , node);
-    cout<<"factor_balanceo: "<<factor_balanceo<<endl;
-
-    if (factor_balanceo > 2) { // el nodo está desequilibrado hacia la izquierda
-        NodeBT left_node;
-        //file.seekg(node.left * sizeof(NodeBT));
-        file.seekg(node.left, ios::beg);
-        file.read((char*)&left_node, sizeof(NodeBT)); // Empaquetado para el read
-
-        if (height(file , left_node.left) >= height(file , left_node.right)) { // rotación simple a la derecha
-            right_rotation(file , node_pos);
-        }
-        else { // rotación doble: izquierda-derecha
-            left_rotation(file , left_node.left);
-            right_rotation(file , node_pos);
-        }
-    } else if (factor_balanceo < -2) { // el nodo está desequilibrado hacia la derecha
-        NodeBT right_node;
-        //file.seekg(node.right * sizeof(NodeBT));
-        file.seekg(node.right, ios::beg);
-        file.read((char*)&right_node, sizeof(NodeBT));
-        if (height(file , right_node.right) >= height( file , right_node.left)) { // rotación simple a la izquierda
-            left_rotation( file ,node_pos);
-        }
-        else { // rotación doble: derecha-izquierda
-            right_rotation( file ,right_node.right);
-            left_rotation( file ,node_pos);
-        }
-    }
-    //update_height(file , node_pos); // Actualizamos las alturas
-    node.height = 1 + std::max(height(file, node.left), height(file, node.right));
-
-    // Verificacion de balanceo
-    if (node_pos != this -> root) {
-        NodeBT parent;
-        file.seekg(node_pos , ios::beg);
-        file.read((char*)&parent, sizeof(NodeBT));
-        balance( file , (node_pos == parent.left) ? parent.left : parent.right);
-    }
-    //valid_balance_recursive(file , node_pos);
-
-}
- */
 void AVLFile::balance(std::fstream& file, long& node) {
     
     NodeBT currentNode;
