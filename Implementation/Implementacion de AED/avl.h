@@ -353,7 +353,6 @@ void AVLTree<T>::balance(NodeBT<T> *&node)
 }
 
 
-
 template <typename T>
 void AVLTree<T>::left_rota(NodeBT<T> *&node)
 {
