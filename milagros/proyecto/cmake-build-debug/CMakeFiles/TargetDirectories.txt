@@ -1,3 +1,0 @@
-/home/milagros/BD2_proyecto1/proyecto/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/milagros/BD2_proyecto1/proyecto/cmake-build-debug/CMakeFiles/recordlecture.dir
-/home/milagros/BD2_proyecto1/proyecto/cmake-build-debug/CMakeFiles/edit_cache.dir
