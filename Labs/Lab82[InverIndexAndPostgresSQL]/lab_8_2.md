@@ -116,7 +116,7 @@ Planning Time: En los resultados obtenidos se observa que el "Planning Time" dis
 
 Execute Time: El Execute Time se refiere al tiempo real de ejecución de la consulta, una vez que se ha planificado. En los resultados proporcionados, se observa que el "Execute Time" se mantiene relativamente estable a medida que aumenta la cantidad de rankings considerados. Esto indica que, aunque el tiempo de ejecución no disminuye significativamente, tampoco aumenta drásticamente a medida que se agregan más rankings.
 
-## P3. Full-text search on Films  
+## P3. Full-text search on CSV Archive  
 ### Código:  
 ```sql
 CREATE TABLE prueba_3 (
