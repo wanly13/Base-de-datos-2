@@ -9,7 +9,12 @@
     - [ROUND ROBIN](#round-robin)
     - [HASH (ATRIBUTOS DISCRETOS)](#hash-atributos-discretos)
     - [RANGE (DISCRETOS, CONTINUOS)](#range-discretos-continuos)
-    - [LIST (CATEGORICOS)](#list-categoricos)
+  - [BUENA FRAGMENTACION](#buena-fragmentacion)
+    - [MINTERM](#minterm)
+    - [FRAGMENTACION DERIVADA](#fragmentacion-derivada)
+  - [FRAGMENTACION VERTICAL](#fragmentacion-vertical)
+    - [MATRIZ DE USO](#matriz-de-uso)
+    - [MATRIX DE AFINIDAD](#matrix-de-afinidad)
 
 
 # SISTEMAS DISTRIBUIDOS  
@@ -56,16 +61,56 @@ DESVENTAJA:
 
 # FRAGMENTACION EJEMPLO  
 ![Alt text](image-3.png)  
+Lo que se espera es:  
+![Alt text](image-7.png)  
+
+COMPLETITUD: Toda tupla que pertenece a una tabla si o si debe existir un fragmento que lo contenga.  
+    - EJM, si un valor de id no esta en ninguna tabla distribuida  
+
+DESARTICULACION: Si una tupla pertenece a otro fragmento, no debe exisitir otro fragmento que lo contegna  
+    - EJM, al momento de fragmentar el ID aparece en T1, T2. Se esta duplicando  
+  
+RECONSTRUCCION: Evitar que haya problemas  
 
 ## FRAGMENTACION HORIZONTAL  
 
 ### ROUND ROBIN  
+![Alt text](image-4.png)  
 
 ### HASH (ATRIBUTOS DISCRETOS)  
+![Alt text](image-5.png)  
+
+- Depende de uno de los datos y de la funcion hash para distribuir equitativamente  
+- Un fragmento puede tener mas tuplas que otros  
+- Falla en RAM, si le aplicamos una busqueda entre un rango de fechas(ejemplo)  
+- Beneficia en la consulta por igualdad  
+- 
 
 ### RANGE (DISCRETOS, CONTINUOS)  
+![Alt text](image-6.png)
+- F1: Tuplas con una condicion, de manera similar con las demas tuplas  
+- Depende del vector del particionamiente (Estos rangos tienen que ser equitativos, en caso no lo sea habra problemas de traer mucha informacion o  quizas poca)  
+- 
 
-### LIST (CATEGORICOS)  
+## BUENA FRAGMENTACION  
 
+### MINTERM  
+![Alt text](image-8.png)
 
+### FRAGMENTACION DERIVADA  
+![Alt text](image-9.png)  
+RESULT:  
+![Alt text](image-10.png)
+
+## FRAGMENTACION VERTICAL  
+### MATRIZ DE USO  
+![Alt text](image-11.png)  
+
+En la matriz, para cada query que atributo de la tabla esta usando  
+Query 1: Usa el atributo 1 y el 3 etcc   
+
+### MATRIX DE AFINIDAD  
+Matriz cuadrada en funcion de sus atributos, en cada celda se aplican unos calculos  
+![Alt text](image-12.png)  
+![Alt text](image-13.png)  
 
