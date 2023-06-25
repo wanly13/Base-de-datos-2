@@ -29,19 +29,22 @@ Arrojan una mejor prescición en los resultados, es la mejor forma de comparar d
 ## BUSQUEDAS  
 
 ### BUSQUEDA KNN  
-![Alt text](image-5.png)
+![Alt text](image-5.png)  
+
 VENTAJA: 
 - Si o si retorna datos, aunque esta lejos sigue estando con el más cercano.  
-- Retorna ordenado, es el mas usado
+- Retorna ordenado, es el mas usado  
 
 DESVENTAJA:  
 - Que puede cojer un vecino que esta muy lejano, ya que seria el mas cercano para el.(La Respuesta se aleja de la query)  
 
 
 ### BUSQUEDA RANGO  
-![Alt text](image-4.png)
+![Alt text](image-4.png)  
+
 VENTAJA:  
-- 
+-   permite recuperar eficientemente los elementos más cercanos a un punto de consulta dentro de un rango especificado  
+
 DESVENTAJA:  
 - Requiere un radio, y la desventaja es el radio que se le va a pasar.  
 SI es radio pequeño, quizas no trae nada, pero si es rango grande te trae mucha data.  
