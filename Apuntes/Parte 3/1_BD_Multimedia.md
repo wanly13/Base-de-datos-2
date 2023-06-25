@@ -29,7 +29,7 @@ Arrojan una mejor prescición en los resultados, es la mejor forma de comparar d
 ## BUSQUEDAS  
 
 ### BUSQUEDA KNN  
-![Alt text](image-5.png)  
+![Alt text](image-6.png)  
 
 VENTAJA: 
 - Si o si retorna datos, aunque esta lejos sigue estando con el más cercano.  
@@ -49,6 +49,14 @@ DESVENTAJA:
 - Requiere un radio, y la desventaja es el radio que se le va a pasar.  
 SI es radio pequeño, quizas no trae nada, pero si es rango grande te trae mucha data.  
 
+## TIPOS DE BUSQUEDA  
+
+### LOWER BOUNDING  
+- Detección de bordes  
+
+
 ## MEDIR EFICIENCIA  
 - Se calcula los tiempos, los indices ayudan a mejorar los tiempos.  
-![Alt text](image-3.png)
+![Alt text](image-3.png)  
+
+
