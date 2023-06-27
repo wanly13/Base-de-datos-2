@@ -114,3 +114,44 @@ Matriz cuadrada en funcion de sus atributos, en cada celda se aplican unos calcu
 ![Alt text](image-12.png)  
 ![Alt text](image-13.png)  
 
+````sql
+SELECT F1.MATRICULA, F1.NOMBRE, F1.DIR, F1.GRUPO, F2.PROMEDIO, F2.EDAD, F2.SEXO
+FROM F1 INNER JOIN F2 ON F1.MATRICULA = F2.MATRICULA
+
+
+
+CREATE TABLE Libro (
+codigo int PRIMARY KEY,
+autor varchar(255),
+tema varchar(255),
+existencias_totales int,
+precio decimal(10,2)
+);
+
+CREATE TABLE Almacen (
+codigo int PRIMARY KEY,
+ciudad varchar(255),
+provincia varchar(255),
+codigo_postal varchar(10),
+valor_inventario decimal(10,2)
+);
+
+CREATE TABLE Existencias (
+libro_codigo int,
+almacen_codigo int,
+cantidad int,
+PRIMARY KEY (libro_codigo, almacen_codigo),
+FOREIGN KEY (libro_codigo) REFERENCES Libro(codigo),
+FOREIGN KEY (almacen_codigo) REFERENCES Almacen(codigo)
+);
+
+CREATE TABLE Existencias_Almacen1 PARTITION OF Existencias
+  FOR VALUES IN (1); -- Fragmento para Almacen de código 1
+
+CREATE TABLE Existencias_Almacen2 PARTITION OF Existencias
+  FOR VALUES IN (2); -- Fragmento para Almacen de código 2
+
+CREATE TABLE Existencias_Almacen3 PARTITION OF Existencias
+  FOR VALUES IN (3); -- Fragmento para Almacen de código 3
+
+```
