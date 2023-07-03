@@ -21,6 +21,7 @@ CREATE TABLE Estudiante_Callao (
     SEXO CHAR(1)
 );
 
+
 -- Crear el procedimiento almacenado InsertarAlumno
 CREATE OR REPLACE PROCEDURE InsertarAlumno(
     DNI INT,
@@ -52,3 +53,25 @@ $$;
 -- Pruebas para ver que funcionó correctamente la insercion
 CALL InsertarAlumno(72227482, 'Marco Wanly', 'Lima', 'B', 9.2, 18, 'M');
 CALL InsertarAlumno(73573822, 'Noelia Marializ', 'Callao', 'A', 9.2, 18, 'S');
+
+
+-- Es un temporal para poder usar la funcion CALL (Para cargar los datos del CSV[no encontre otra forma de hacerlo directo])
+CREATE TABLE temp_estudiantes (
+  DNI INT,
+  NOMBRE VARCHAR(255),
+  Ciudad VARCHAR(255),
+  GRUPO VARCHAR(1),
+  PROMEDIO FLOAT,
+  EDAD INT,
+  SEXO CHAR(1)
+);
+-- Para la llamada de la funcion insertar
+DO $$ 
+DECLARE 
+    estudiante RECORD;
+BEGIN
+    FOR estudiante IN (SELECT * FROM temp_estudiantes)
+    LOOP
+        PERFORM InsertarAlumno(estudiante.DNI, estudiante.NOMBRE, estudiante.Ciudad, estudiante.GRUPO, estudiante.PROMEDIO, estudiante.EDAD, estudiante.SEXO);
+    END LOOP;
+END $$;
