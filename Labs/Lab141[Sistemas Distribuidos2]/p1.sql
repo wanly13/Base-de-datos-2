@@ -51,11 +51,13 @@ END;
 $$;
 
 -- Pruebas para ver que funcionó correctamente la insercion
-CALL InsertarAlumno(72227482, 'Marco Wanly', 'Lima', 'B', 9.2, 18, 'M');
 CALL InsertarAlumno(73573822, 'Noelia Marializ', 'Callao', 'A', 9.2, 18, 'S');
+select * from Estudiante_Callao;
 
+CALL InsertarAlumno(72227482, 'Marco Wanly', 'Lima', 'B', 9.2, 18, 'M');
+select * from Estudiante_Lima;
 
--- Es un temporal para poder usar la funcion CALL (Para cargar los datos del CSV[no encontre otra forma de hacerlo directo])
+-- Cargar la data desde un archivo y guardar en un tabla temporal
 CREATE TABLE temp_estudiantes (
   DNI INT,
   NOMBRE VARCHAR(255),
@@ -65,6 +67,12 @@ CREATE TABLE temp_estudiantes (
   EDAD INT,
   SEXO CHAR(1)
 );
+
+-- cargar usuarios de el dataset
+\\copy public.temp_estudiantes (dni, nombre, ciudad, grupo, promedio, edad, sexo) FROM 'C:/Users/ObregonW/Desktop/UTEC/BASE-D~2/Labs/LAB141~1/dataset/LIMA_C~1.CSV' DELIMITER ',' CSV HEADER QUOTE '\"' ESCAPE '''';""
+select * from temp_estudiantes;
+
+
 -- Para la llamada de la funcion insertar
 DO $$ 
 DECLARE 
@@ -72,6 +80,8 @@ DECLARE
 BEGIN
     FOR estudiante IN (SELECT * FROM temp_estudiantes)
     LOOP
-        PERFORM InsertarAlumno(estudiante.DNI, estudiante.NOMBRE, estudiante.Ciudad, estudiante.GRUPO, estudiante.PROMEDIO, estudiante.EDAD, estudiante.SEXO);
+        CALL InsertarAlumno(estudiante.DNI, estudiante.NOMBRE, estudiante.Ciudad, estudiante.GRUPO, estudiante.PROMEDIO, estudiante.EDAD, estudiante.SEXO);
     END LOOP;
 END $$;
+select * from Estudiante_Callao;
+select * from Estudiante_Lima;

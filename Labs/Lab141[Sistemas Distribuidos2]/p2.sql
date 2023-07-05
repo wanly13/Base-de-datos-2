@@ -1,16 +1,3 @@
--- CREAR UNA NUEVA TABLA EN CASO YA EXISTA
-
-CREATE TABLE Estudiante (
-  DNI INT,
-  NOMBRE VARCHAR(255),
-  Ciudad VARCHAR(255),
-  GRUPO VARCHAR(1),
-  PROMEDIO FLOAT,
-  EDAD INT,
-  SEXO CHAR(1)
-);
-
-
 CREATE OR REPLACE FUNCTION create_partition_and_insert() RETURNS TRIGGER AS
 $BODY$
 DECLARE
@@ -37,6 +24,10 @@ LANGUAGE plpgsql;
 
 -- Crear el disparador (trigger) para invocar la función create_partition_and_insert
 CREATE TRIGGER tr_create_partition_and_insert
-BEFORE INSERT ON Estudiante
+BEFORE INSERT ON temp_estudiantes
 FOR EACH ROW
 EXECUTE FUNCTION create_partition_and_insert();
+
+
+
+insert into temp_estudiantes values (72227482, 'Marco Wanly', 'Chacas', 'B', 9.2, 18, 'M');
